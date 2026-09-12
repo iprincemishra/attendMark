@@ -1,9 +1,10 @@
-import dotenv from 'dotenv/config';
+import 'dotenv/config';
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import prisma from './config/db';
 import morgan from 'morgan';
 import authRoute from './routes/auth.routes';
+import studentRoute from './routes/student.routes';
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
@@ -15,6 +16,7 @@ app.use(express.json());
 
 // * Routes
 app.use("/api/auth", authRoute)
+app.use("/api/students", studentRoute)
 
 
 
@@ -22,8 +24,10 @@ app.use("/api/auth", authRoute)
 
 app.get('/api/health', (req: Request, res: Response) => {
     res.status(200).json({
-        status: 'Server is running',
-        database: 'connected'
+        success: true,
+        message: "Server is running smoothly 🚀",
+        uptime: process.uptime(),
+        date: new Date().toISOString()
     });
 });
 
