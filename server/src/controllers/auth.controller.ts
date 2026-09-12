@@ -70,3 +70,89 @@ export const teacherLogin = async (req: Request, res: Response<IApiResponse>) =>
         });
     }
 };
+
+export const studentLogin = async (req: Request, res: Response<IApiResponse>) => {
+    try {
+        const { email, rollNumber, deviceId } = req.body;
+
+        if (!email || !rollNumber || !deviceId) {
+            return res.status(400).json({
+                success: false,
+                message: "Roll number, email, and deviceId are required"
+            });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+        const normalizedRoll = rollNumber.trim().toUpperCase();
+
+        const student = await prisma.user.findFirst({
+            where: {
+                rollNumber: normalizedRoll,
+                email: normalizedEmail,
+                role: 'STUDENT'
+            }
+        });
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "Student not found with this roll number & email"
+            });
+        }
+
+        if (student.deviceId) {
+            if (student.deviceId !== deviceId) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Device mismatch! Your account is already bound to another phone. Contact admin if you changed your device."
+                });
+            }
+        } else {
+            try {
+                await prisma.user.update({
+                    where: { id: student.id },
+                    data: { deviceId }
+                });
+            } catch (dbError: any) {
+                if (dbError.code === 'P2002') {
+                    return res.status(403).json({
+                        success: false,
+                        message: "This physical device is already registered to another student. You cannot share phones for attendance."
+                    });
+                }
+                throw dbError;
+            }
+        }
+
+        const token = jwt.sign(
+            {
+                userId: student.id,
+                email: student.email,
+                role: student.role
+            },
+            JWT_SECRET,
+            { expiresIn: '30d' }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: 'Student login successful & device verified',
+            token,
+            data: {
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                rollNumber: student.rollNumber,
+                deviceId: deviceId
+            }
+        });
+
+    } catch (error: any) {
+        console.error("Student login error: ", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
