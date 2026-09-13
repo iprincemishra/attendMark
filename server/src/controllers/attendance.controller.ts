@@ -51,7 +51,7 @@ export const createAttendanceSession = async (req: AuthenticatedRequest, res: Re
     }
 }
 
-export const markAttendance = async (req: AuthenticatedRequest, res: Response) => {
+export const markAttendance = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
     try {
         const studentId = req.user?.userId;
 
@@ -145,4 +145,75 @@ export const markAttendance = async (req: AuthenticatedRequest, res: Response) =
         });
     }
 
+}
+
+export const getSessionAttendance = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
+    try {
+        const teacherId = req.user?.userId
+
+        const { sessionId } = req.params;
+
+        if (!sessionId) {
+            return res.status(400).json({
+                success: false,
+                message: "Session ID is required"
+            })
+        }
+
+        const session = await prisma.session.findUnique({
+            where: { id: sessionId as string },
+        });
+
+        if (!session) {
+            return res.status(404).json({
+                success: false,
+                message: 'Session not found'
+            });
+        }
+
+        if (session.teacherId !== teacherId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Unauthorized: You did not create this session'
+            });
+        }
+        const totalStudents = await prisma.user.count({
+            where: { role: 'STUDENT' },
+        })
+
+        const attendanceRecords = await prisma.attendance.findMany({
+            where: { sessionId: sessionId as string },
+            include: {
+                student: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        rollNumber: true
+                    }
+                }
+            },
+            orderBy: { timestamp: 'asc' }
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Session attendance fetched successfully",
+            data: {
+                sessionId,
+                subject: session.subject,
+                totalPresent: attendanceRecords.length,
+                attendance: attendanceRecords,
+                totalStudents: totalStudents
+            }
+        })
+
+    } catch (error: any) {
+        console.error("Get session attendance error: ", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        })
+    }
 }
