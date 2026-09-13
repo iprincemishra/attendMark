@@ -50,3 +50,44 @@ export const verifyTeacher = (req: AuthenticatedRequest, res: Response<IApiRespo
         });
     }
 };
+
+export const verifyToken = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.status(401).json({
+            success: false,
+            message: 'Unauthorized: No token provided'
+        });
+        return;
+    }
+    const token = authHeader.split(' ')[1];
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as {
+            userId: string;
+            email: string; role: string
+        };
+        req.user = decoded;
+        next();
+
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            message: 'Invalid or expired token'
+        });
+        return;
+    }
+};
+
+export const requireRole = (role: 'TEACHER' | 'STUDENT' | 'ADMIN') => {
+    return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+        if (!req.user || req.user.role !== role) {
+            res.status(403).json({
+                success: false,
+                message: `Forbidden: ${role} access required`
+            });
+            return;
+        }
+        next();
+    };
+};
