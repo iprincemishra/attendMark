@@ -112,11 +112,12 @@ export const markAttendance = async (req: AuthenticatedRequest, res: Response) =
             });
         }
 
-        const scanTime = new Date(timestamp);
-        if (isNaN(scanTime.getTime())) {
+        const parsedTimestamp = typeof timestamp === 'number' ? timestamp : Number(timestamp);
+        const scanTime = new Date(parsedTimestamp);
+        if (isNaN(scanTime.getTime()) || parsedTimestamp < 1000000000000) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid timestamp format'
+                message: 'Invalid timestamp format. Send valid milliseconds (Date.now()) or ISO string.'
             });
         }
 

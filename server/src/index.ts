@@ -5,6 +5,7 @@ import prisma from './config/db';
 import morgan from 'morgan';
 import authRoute from './routes/auth.routes';
 import studentRoute from './routes/student.routes';
+import attendanceRoute from './routes/attendance.routes';
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
@@ -17,6 +18,7 @@ app.use(express.json());
 // * Routes
 app.use("/api/auth", authRoute)
 app.use("/api/students", studentRoute)
+app.use("/api/attendance", attendanceRoute)
 
 
 
