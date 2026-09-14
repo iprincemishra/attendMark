@@ -217,3 +217,92 @@ export const getSessionAttendance = async (req: AuthenticatedRequest, res: Respo
         })
     }
 }
+
+export const getStudentAttendanceHistory = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
+    try {
+        const studentId = req.user?.userId;
+        if (!studentId) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized: Student ID missing'
+            });
+        }
+
+        const totalSessionsGrouped = await prisma.session.groupBy({
+            by: ['subject'],
+            _count: { id: true }
+        });
+
+        const attendanceRecords = await prisma.attendance.findMany({
+            where: { studentId },
+            include: {
+                session: {
+                    select: {
+                        id: true,
+                        subject: true,
+                        createdAt: true,
+                    },
+                },
+            },
+            orderBy: { timestamp: 'desc' },
+        });
+
+        const subjectBreakdown: Record<string, {
+            total: number,
+            attended: number,
+            skipped: number,
+            percentage: string
+        }> = {};
+
+        totalSessionsGrouped.forEach(group => {
+            subjectBreakdown[group.subject] = {
+                total: group._count.id,
+                attended: 0,
+                skipped: 0,
+                percentage: "0.00"
+            };
+        });
+
+        attendanceRecords.forEach(record => {
+            const subject = record.session.subject;
+            if (subjectBreakdown[subject]) {
+                subjectBreakdown[subject].attended += 1;
+            }
+        });
+
+        let overallTotal = 0;
+        let overallAttended = attendanceRecords.length;
+
+        Object.keys(subjectBreakdown).forEach(subject => {
+            const stats = subjectBreakdown[subject];
+            stats.skipped = stats.total - stats.attended;
+            stats.percentage = ((stats.attended / stats.total) * 100).toFixed(2);
+
+            overallTotal += stats.total;
+        });
+
+        const overallPercentage = overallTotal === 0 ? "0.00" : ((overallAttended / overallTotal) * 100).toFixed(2);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Student attendance history fetched successfully',
+            data: {
+                overall: {
+                    totalClassesHeld: overallTotal,
+                    classesAttended: overallAttended,
+                    skippedClasses: overallTotal - overallAttended,
+                    percentage: `${overallPercentage}%`
+                },
+                subjectWise: subjectBreakdown,
+                recentHistory: attendanceRecords
+            },
+        });
+    } catch (error: any) {
+        console.error('Get student history error:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+            error: error.message
+        });
+    }
+};
