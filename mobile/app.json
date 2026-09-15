@@ -35,7 +35,7 @@
         }
       ],
       [
-        "@config-plugins/react-native-ble-plx",
+        "react-native-ble-plx",
         {
           "isBackgroundEnabled": true,
           "modes": [
@@ -43,7 +43,6 @@
             "central"
           ],
           "bluetoothAlwaysPermission": "Allow $(PRODUCT_NAME) to connect to attendance devices",
-          "bluetoothPeripheralPermission": "Allow $(PRODUCT_NAME) to broadcast attendance sessions"
         }
       ]
     ],
