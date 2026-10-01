@@ -1,7 +1,7 @@
 import { Response } from "express";
-import { IApiResponse } from "../types/response.types";
-import { AuthenticatedRequest } from "../middleware/auth.middleware";
-import prisma from "../config/db";
+import { IApiResponse } from "../types/response.types.js";
+import { AuthenticatedRequest } from "../middleware/auth.middleware.js";
+import prisma from "../config/db.js";
 import crypto from 'crypto'
 
 export const createAttendanceSession = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
@@ -254,7 +254,7 @@ export const getStudentAttendanceHistory = async (req: AuthenticatedRequest, res
             percentage: string
         }> = {};
 
-        totalSessionsGrouped.forEach(group => {
+        totalSessionsGrouped.forEach((group: any) => {
             subjectBreakdown[group.subject] = {
                 total: group._count.id,
                 attended: 0,
@@ -263,7 +263,7 @@ export const getStudentAttendanceHistory = async (req: AuthenticatedRequest, res
             };
         });
 
-        attendanceRecords.forEach(record => {
+        attendanceRecords.forEach((record: any) => {
             const subject = record.session.subject;
             if (subjectBreakdown[subject]) {
                 subjectBreakdown[subject].attended += 1;

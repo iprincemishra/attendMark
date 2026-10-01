@@ -1,9 +1,9 @@
 import { Router } from "express";
 import multer from "multer";
-import { addSingleStudent, uploadStudentsCsv } from "../controllers/student.controller";
-import { verifyTeacher } from "../middleware/auth.middleware";
+import { addSingleStudent, uploadStudentsCsv } from "../controllers/student.controller.js";
+import { verifyTeacher } from "../middleware/auth.middleware.js";
 
-const studentRoute = Router();
+const studentRoute: Router = Router();
 
 const upload = multer({
     storage: multer.memoryStorage(),

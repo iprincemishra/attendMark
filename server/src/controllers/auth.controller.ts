@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import prisma from "../config/db";
-import { IApiResponse } from "../types/response.types";
+import prisma from "../config/db.js";
+import { IApiResponse } from "../types/response.types.js";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 

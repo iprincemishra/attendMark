@@ -1,9 +1,9 @@
 import { Response } from 'express';
-import { AuthenticatedRequest } from '../middleware/auth.middleware';
-import prisma from '../config/db';
+import { AuthenticatedRequest } from '../middleware/auth.middleware.js';
+import prisma from '../config/db.js';
 import csv from 'csv-parser';
 import { Readable } from 'stream';
-import { IApiResponse } from '../types/response.types';
+import { IApiResponse } from '../types/response.types.js';
 
 // 1. Single Student Add 
 export const addSingleStudent = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
@@ -104,8 +104,8 @@ export const uploadStudentsCsv = async (req: AuthenticatedRequest, res: Response
                     });
 
                     // Create Sets for ultra-fast lookups
-                    const existingEmails = new Set(existingUsers.map(u => u.email));
-                    const existingRolls = new Set(existingUsers.map(u => u.rollNumber));
+                    const existingEmails = new Set(existingUsers.map((u: any) => u.email));
+                    const existingRolls = new Set(existingUsers.map((u: any) => u.rollNumber));
 
                     // Filter out students that already exist
                     const newStudents = validRows.filter(row =>

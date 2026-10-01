@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { createAttendanceSession, getSessionAttendance, getStudentAttendanceHistory, markAttendance } from '../controllers/attendance.controller';
-import { verifyToken, requireRole } from '../middleware/auth.middleware';
+import { createAttendanceSession, getSessionAttendance, getStudentAttendanceHistory, markAttendance } from '../controllers/attendance.controller.js';
+import { verifyToken, requireRole } from '../middleware/auth.middleware.js';
 
-const attendanceRoute = Router();
+const attendanceRoute: Router = Router();
 
 attendanceRoute.post('/start-session', verifyToken, requireRole('TEACHER'), createAttendanceSession);
 

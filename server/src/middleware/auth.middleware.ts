@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { IApiResponse } from '../types/response.types';
+import { IApiResponse } from '../types/response.types.js';
 import 'multer';
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
