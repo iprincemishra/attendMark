@@ -19,11 +19,7 @@ export default function Index() {
       if (user.role === 'TEACHER') {
         router.replace('/(teacher)/dashboard');
       } else {
-        if (!user.deviceId) {
-          router.replace('/(auth)/register-device');
-        } else {
-          router.replace('/(student)/dashboard');
-        }
+        router.replace('/(student)/dashboard');
       }
     }
   }, [token, user, isLoading, segments]);

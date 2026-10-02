@@ -28,3 +28,21 @@ export async function getUser(): Promise<IUser | null> {
 export async function removeUser() {
     await SecureStore.deleteItemAsync('auth_user');
 }
+
+const DEVICE_KEY = process.env.DEVICE_KEY!;
+
+export async function getDeviceUuid(): Promise<string | null> {
+    try {
+        return await SecureStore.getItemAsync(DEVICE_KEY);
+    } catch {
+        return null;
+    }
+}
+
+export async function saveDeviceUuid(uuid: string): Promise<void> {
+    try {
+        await SecureStore.setItemAsync(DEVICE_KEY, uuid);
+    } catch (e) {
+        console.warn('Failed to save device UUID', e);
+    }
+}
