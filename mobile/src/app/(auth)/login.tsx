@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as Crypto from 'expo-crypto';
-import { getDeviceUuid, saveDeviceUuid } from '../../utils/secureStore';
-import * as Device from 'expo-device';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
+import * as Application from 'expo-application';
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -18,12 +16,13 @@ export default function LoginScreen() {
     const [loading, setLoading] = useState(false);
 
     const getDeviceId = async () => {
-        let id = await getDeviceUuid();
-        if (!id) {
-            id = `${Device.modelId || 'dev'}-${Crypto.randomUUID()}`;
-            await saveDeviceUuid(id);
+        let deviceId = '';
+        if (Platform.OS === 'android') {
+            deviceId = Application.getAndroidId() || '';
+        } else if (Platform.OS === 'ios') {
+            deviceId = await Application.getIosIdForVendorAsync() || '';
         }
-        return id;
+        return deviceId;
     };
 
     const handleLogin = async () => {
@@ -56,7 +55,6 @@ export default function LoginScreen() {
             }
 
             const { success, token, message, data: user } = response.data;
-            console.log("Full Response Data:", JSON.stringify(response.data));
 
             if (!success || !token || !user) {
                 throw new Error(message || 'Login failed. Please check your credentials.');

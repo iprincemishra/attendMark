@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { bleService } from "@/services/ble";
 import { api } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { getDeviceUuid } from "@/utils/secureStore";
 
 const ScannerScreen = () => {
     const router = useRouter();
@@ -61,13 +62,21 @@ const ScannerScreen = () => {
         try {
             setLoading(true);
 
-            const [sessionId, actualToken] = foundSession.token.split(':');
+            const deviceId = await getDeviceUuid();
+
+            const tokenParts = foundSession.token.split(':');
+            const sessionId = tokenParts[0];
+            const actualToken = tokenParts.length > 1 ? tokenParts[1] : null;
+
+            if (!sessionId || !actualToken) {
+                throw new Error('Invalid session token format');
+            }
 
             const response = await api.post('/attendance/mark', {
-                sessionId: sessionId || foundSession.token,
-                token: actualToken || foundSession.token,
-                deviceId: user?.deviceId,
-                timestamp: Date.now(),
+                sessionId,
+                token: actualToken,
+                deviceId: deviceId,
+                timestamp: new Date().toISOString(),
             });
 
             const { success, message } = response.data;

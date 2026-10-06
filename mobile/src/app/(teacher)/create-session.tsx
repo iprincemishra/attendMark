@@ -29,14 +29,14 @@ const CreateSessionScreen = () => {
                 throw new Error(message || 'Failed to create session on backend')
             }
 
-            await bleService.startBroadcasting(data.token)
+            await bleService.startBroadcasting(data.sessionId, data.token)
 
             Alert.alert('Session started! ', 'BLE broadcast live ho gaya hai.', [
                 {
                     text: 'View Live',
                     onPress: () => {
                         router.replace({
-                            pathname: '/(teacher)/dashboard',
+                            pathname: '/(teacher)/session-live',
                             params: { sessionId: data.sessionId }
                         })
                     }

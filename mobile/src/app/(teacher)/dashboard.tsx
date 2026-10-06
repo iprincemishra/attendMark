@@ -7,8 +7,6 @@ import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, 
 const TeacherDashboard = () => {
 
     const params = useLocalSearchParams();
-    const sessionId = params.sessionId;
-
     const router = useRouter();
     const { user, logout } = useAuth();
 
@@ -17,25 +15,18 @@ const TeacherDashboard = () => {
     const [refreshing, setRefreshing] = useState(false);
 
     const fetchActiveSession = async () => {
-        if (!sessionId) {
-            console.log("No sessionId found in params, stopping fetch.");
-            setActiveSession(null);
-            setLoading(false);
-            setRefreshing(false);
-            return;
-        }
-
         try {
             setLoading(true);
-            console.log(`Fetching session details for: ${sessionId}`);
-            const res = await api.get(`/attendance/${sessionId}`);
-
-            if (res.data.success) {
-                console.log("Session fetched successfully:", res.data.data);
-                setActiveSession(res.data.data);
-            } else {
-                setActiveSession(null);
+            if (params.sessionId) {
+                const res = await api.get(`/attendance/${params.sessionId}`);
+                if (res.data.success && res.data.data) {
+                    setActiveSession(res.data.data);
+                    setLoading(false);
+                    setRefreshing(false);
+                    return;
+                }
             }
+            setActiveSession(null);
         } catch (error: any) {
             console.error('Error fetching active session:', error);
             setActiveSession(null);
@@ -47,12 +38,12 @@ const TeacherDashboard = () => {
 
     useEffect(() => {
         fetchActiveSession();
-    }, [sessionId]);
+    }, [params.sessionId]);
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
         fetchActiveSession();
-    }, [sessionId]);
+    }, [params.sessionId]);
 
     const handleLogout = async () => {
         await logout();
@@ -103,7 +94,7 @@ const TeacherDashboard = () => {
                     <TouchableOpacity
                         onPress={() => router.push({
                             pathname: '/(teacher)/session-live',
-                            params: { id: activeSession.id }
+                            params: { sessionId: activeSession.sessionId || activeSession.id }
                         })}
                         className="bg-blue-50 p-6 rounded-3xl shadow-sm border border-blue-200 flex-row justify-between items-center"
                     >
