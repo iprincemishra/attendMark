@@ -31,7 +31,7 @@ model Session {
   teacherId   String
   teacher     User         @relation("TeacherSessions", fields: [teacherId], references: [id])
   subject     String
-  token       String
+  sessionCode String       @unique @db.VarChar(8)
   expiresAt   DateTime
   createdAt   DateTime     @default(now())
   attendances Attendance[]

@@ -17,14 +17,14 @@ export const createAttendanceSession = async (req: AuthenticatedRequest, res: Re
             })
         }
 
-        const token = crypto.randomBytes(4).toString('hex');
+        const sessionCode = crypto.randomBytes(4).toString('hex').toUpperCase()
         const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000)
 
         const session = await prisma.session.create({
             data: {
                 teacherId: teacherId!,
                 subject,
-                token,
+                sessionCode,
                 expiresAt
             }
         })
@@ -35,7 +35,7 @@ export const createAttendanceSession = async (req: AuthenticatedRequest, res: Re
             data: {
                 sessionId: session.id,
                 subject: session.subject,
-                token: session.token,
+                sessionCode: session.sessionCode,
                 expiresAt: session.expiresAt,
             }
         })
@@ -47,7 +47,6 @@ export const createAttendanceSession = async (req: AuthenticatedRequest, res: Re
             message: "Internal server error",
             error: error.message
         })
-
     }
 }
 
@@ -55,12 +54,12 @@ export const markAttendance = async (req: AuthenticatedRequest, res: Response<IA
     try {
         const studentId = req.user?.userId;
 
-        const { sessionId, token, deviceId, timestamp } = req.body;
+        const { sessionCode, deviceId, timestamp } = req.body;
 
-        if (!sessionId || !token || !deviceId || !timestamp) {
+        if (!sessionCode || !deviceId || !timestamp) {
             return res.status(400).json({
                 success: false,
-                message: 'Session ID, token, deviceId, and timestamp are required'
+                message: 'sessionCode, deviceId, and timestamp are required'
             });
         }
 
@@ -79,7 +78,7 @@ export const markAttendance = async (req: AuthenticatedRequest, res: Response<IA
             });
         }
 
-        const session = await prisma.session.findUnique({ where: { id: sessionId } });
+        const session = await prisma.session.findUnique({ where: { sessionCode } });
         if (!session) {
             return res.status(404).json({
                 success: false,
@@ -94,15 +93,8 @@ export const markAttendance = async (req: AuthenticatedRequest, res: Response<IA
             });
         }
 
-        if (session.token !== token) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid or expired BLE rotating token'
-            });
-        }
-
         const existingAttendance = await prisma.attendance.findFirst({
-            where: { sessionId, studentId },
+            where: { sessionId: session.id, studentId },
         });
 
         if (existingAttendance) {
@@ -123,7 +115,7 @@ export const markAttendance = async (req: AuthenticatedRequest, res: Response<IA
 
         const attendance = await prisma.attendance.create({
             data: {
-                sessionId: sessionId!,
+                sessionId: session.id,
                 studentId: studentId!,
                 timestamp: scanTime,
                 status: 'PRESENT',
@@ -144,7 +136,6 @@ export const markAttendance = async (req: AuthenticatedRequest, res: Response<IA
             error: error.message
         });
     }
-
 }
 
 export const getSessionAttendance = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
