@@ -17,7 +17,7 @@ export const createAttendanceSession = async (req: AuthenticatedRequest, res: Re
             })
         }
 
-        const token = crypto.randomBytes(16).toString('hex')
+        const token = crypto.randomBytes(4).toString('hex');
         const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000)
 
         const session = await prisma.session.create({
