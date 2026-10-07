@@ -4,6 +4,8 @@ const { BleModule } = NativeModules;
 const bleEmitter = new NativeEventEmitter(BleModule);
 
 class BleService {
+    private scanSubscription: ReturnType<typeof bleEmitter.addListener> | null = null;
+
     async requestPermissions(): Promise<boolean> {
         if (Platform.OS !== 'android') return true;
 
@@ -23,15 +25,15 @@ class BleService {
         return result === PermissionsAndroid.RESULTS.GRANTED;
     }
 
-    async startBroadcasting(sessionId: string, token: string): Promise<boolean> {
+    async startBroadcasting(sessionCode: string): Promise<boolean> {
         const hasPermission = await this.requestPermissions();
         if (!hasPermission) throw new Error('Bluetooth advertise permissions missing.');
 
-        if (!sessionId?.trim() || !token?.trim()) {
-            throw new Error('Session ID and Token are required for BLE broadcasting.');
+        if (!sessionCode?.trim()) {
+            throw new Error('Session code is required for BLE broadcasting.');
         }
 
-        return await BleModule.startAdvertising(sessionId, token);
+        return await BleModule.startAdvertising(sessionCode);
     }
 
     async stopBroadcasting(): Promise<void> {
@@ -42,7 +44,9 @@ class BleService {
         const hasPermission = await this.requestPermissions();
         if (!hasPermission) throw new Error('Bluetooth permissions not granted.');
 
-        bleEmitter.addListener('onDeviceFound', (event) => {
+        this.scanSubscription?.remove();
+
+        this.scanSubscription = bleEmitter.addListener('onDeviceFound', (event) => {
             onDeviceFound(event, event.parsedData);
         });
 
@@ -50,6 +54,8 @@ class BleService {
     }
 
     async stopScanning(): Promise<void> {
+        this.scanSubscription?.remove();
+        this.scanSubscription = null;
         await BleModule.stopScanning();
     }
 }

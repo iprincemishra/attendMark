@@ -25,11 +25,11 @@ const CreateSessionScreen = () => {
 
             const { success, message, data } = response.data
 
-            if (!success || !data?.token) {
+            if (!success || !data?.sessionCode) {
                 throw new Error(message || 'Failed to create session on backend')
             }
 
-            await bleService.startBroadcasting(data.sessionId, data.token)
+            await bleService.startBroadcasting(data.sessionCode)
 
             Alert.alert('Session started! ', 'BLE broadcast live ho gaya hai.', [
                 {

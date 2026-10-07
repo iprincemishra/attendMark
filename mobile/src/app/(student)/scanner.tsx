@@ -13,7 +13,7 @@ const ScannerScreen = () => {
     const [scanning, setScanning] = useState(false);
     const [loading, setLoading] = useState(false);
     const [foundSession, setFoundSession] = useState<{
-        token: string;
+        sessionCode: string;
         deviceName: string
     } | null>(null);
 
@@ -28,11 +28,11 @@ const ScannerScreen = () => {
             setScanning(true);
             setFoundSession(null);
 
-            await bleService.startScanning((device, token) => {
-                console.log('Found AttendMark Session Device:', device.name);
+            await bleService.startScanning((device, sessionCode) => {
+                console.log('Found AttendMark Session Code:', sessionCode);
                 setFoundSession({
-                    token,
-                    deviceName: device.name || 'Teacher Beacon'
+                    sessionCode,
+                    deviceName: device.deviceAddress || 'Teacher Beacon'
                 });
                 bleService.stopScanning();
                 setScanning(false);
@@ -64,19 +64,10 @@ const ScannerScreen = () => {
 
             const deviceId = await getDeviceUuid();
 
-            const tokenParts = foundSession.token.split(':');
-            const sessionId = tokenParts[0];
-            const actualToken = tokenParts.length > 1 ? tokenParts[1] : null;
-
-            if (!sessionId || !actualToken) {
-                throw new Error('Invalid session token format');
-            }
-
             const response = await api.post('/attendance/mark', {
-                sessionId,
-                token: actualToken,
+                sessionCode: foundSession.sessionCode,
                 deviceId: deviceId,
-                timestamp: new Date().toISOString(),
+                timestamp: Date.now(),
             });
 
             const { success, message } = response.data;
