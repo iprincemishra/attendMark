@@ -74,7 +74,6 @@ export default function LoginScreen() {
                 error.message ||
                 'Invalid credentials. Please try again.';
             Alert.alert('Login Failed', errMessage);
-            console.error("Login Error Details:", error.response?.data || error.message);
         } finally {
             setLoading(false);
         }

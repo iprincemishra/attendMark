@@ -28,11 +28,15 @@ const ScannerScreen = () => {
             setScanning(true);
             setFoundSession(null);
 
-            await bleService.startScanning((device, sessionCode) => {
-                console.log('Found AttendMark Session Code:', sessionCode);
+            await bleService.startScanning((eventData: any) => {
+
+                const code = eventData?.parsedData || eventData;
+                const address = eventData?.deviceAddress || 'Teacher Beacon';
+
+
                 setFoundSession({
-                    sessionCode,
-                    deviceName: device.deviceAddress || 'Teacher Beacon'
+                    sessionCode: code,
+                    deviceName: address
                 });
                 bleService.stopScanning();
                 setScanning(false);
@@ -62,7 +66,14 @@ const ScannerScreen = () => {
         try {
             setLoading(true);
 
-            const deviceId = await getDeviceUuid();
+            // ⚠️ Fix: getDeviceUuid fail hone par user context se fallback lo
+            const deviceId = (await getDeviceUuid()) || user?.deviceId;
+
+            if (!deviceId) {
+                Alert.alert("Authentication Error", "Device ID missing. Please re-login.");
+                setLoading(false);
+                return;
+            }
 
             const response = await api.post('/attendance/mark', {
                 sessionCode: foundSession.sessionCode,
@@ -76,10 +87,7 @@ const ScannerScreen = () => {
             }
 
             Alert.alert('Success! 🎉', 'Teri attendance lag gayi bhai!', [
-                {
-                    text: 'OK',
-                    onPress: () => router.back()
-                }
+                { text: 'OK', onPress: () => router.back() }
             ]);
         } catch (error: any) {
             const errMessage = error.response?.data?.message || error.message || 'Something went wrong';
