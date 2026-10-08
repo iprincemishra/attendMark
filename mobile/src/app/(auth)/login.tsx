@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import * as Application from 'expo-application';
+import CustomAlert from '@/components/CustomAlert';
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -14,6 +15,19 @@ export default function LoginScreen() {
     const [password, setPassword] = useState('');
     const [rollNumber, setRollNumber] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const [alert, setAlert] = useState({
+        visible: false,
+        title: '',
+        message: '',
+        type: 'info' as 'success' | 'error' | 'info',
+    });
+
+    const showAlert = (title: string, message: string, type: 'success' | 'error' | 'info' = 'info') => {
+        setAlert({ visible: true, title, message, type });
+    };
+
+    const closeAlert = () => setAlert(prev => ({ ...prev, visible: false }));
 
     const getDeviceId = async () => {
         let deviceId = '';
@@ -27,11 +41,11 @@ export default function LoginScreen() {
 
     const handleLogin = async () => {
         if (role === 'teacher' && (!email || !password)) {
-            Alert.alert('Validation Error', 'Teacher ke liye Email aur Password dono zaroori hain.');
+            showAlert('Required Fields', 'Please enter both your email and password.', 'error');
             return;
         }
         if (role === 'student' && (!email || !rollNumber)) {
-            Alert.alert('Validation Error', 'Student ke liye Email aur Roll Number dono zaroori hain.');
+            showAlert('Required Fields', 'Please enter both your email and roll number.', 'error');
             return;
         }
 
@@ -69,11 +83,8 @@ export default function LoginScreen() {
             }
 
         } catch (error: any) {
-            const errMessage =
-                error.response?.data?.message ||
-                error.message ||
-                'Invalid credentials. Please try again.';
-            Alert.alert('Login Failed', errMessage);
+            const errMessage = error.response?.data?.message || error.message || 'Invalid credentials. Please try again.';
+            showAlert('Login Failed', errMessage, 'error');
         } finally {
             setLoading(false);
         }
@@ -84,7 +95,7 @@ export default function LoginScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             className="flex-1 bg-slate-950 justify-center px-6"
         >
-            <View className="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-xl">
+            <View className="bg-slate-900 px-8 py-6 rounded-3xl border border-slate-800 shadow-xl mb-20">
 
                 <View className="mb-8">
                     <Text className="text-4xl font-bold text-white mb-2">AttendMark</Text>
@@ -161,6 +172,13 @@ export default function LoginScreen() {
                     )}
                 </View>
             </View>
+            <CustomAlert
+                visible={alert.visible}
+                title={alert.title}
+                message={alert.message}
+                type={alert.type}
+                onClose={closeAlert}
+            />
         </KeyboardAvoidingView>
     );
 }

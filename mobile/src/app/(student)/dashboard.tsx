@@ -14,7 +14,7 @@ const StudentDashboard = () => {
 
     const fetchStats = async () => {
         try {
-            const res = await api.get('/attendance/my-history');
+            const res = await api.get('/attendance/history');
             if (res.data.success) {
                 setStats(res.data.data);
             }
@@ -81,28 +81,76 @@ const StudentDashboard = () => {
                 {loading && !refreshing ? (
                     <ActivityIndicator size="large" color="#208AEF" className="mt-8" />
                 ) : stats ? (
-                    <View className="flex-row justify-between flex-wrap">
-                        <View className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 w-full mb-4">
-                            <Text className="text-gray-500 font-medium">Overall Attendance</Text>
-                            <Text className="text-4xl font-black text-blue-600 mt-1">
-                                {stats.overall?.overallPercentage || '0%'}
-                            </Text>
+                    <>
+                        <View className="flex-row justify-between flex-wrap mb-6">
+                            <View className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 w-full mb-4">
+                                <Text className="text-gray-500 font-medium">Overall Attendance</Text>
+                                <Text className="text-4xl font-black text-blue-600 mt-1">
+                                    {stats.overall?.percentage || '0%'}
+                                </Text>
+                            </View>
+
+                            <View className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 w-[48%]">
+                                <Text className="text-gray-500 font-medium mb-1">Attended</Text>
+                                <Text className="text-2xl font-bold text-green-600">
+                                    {stats.overall?.classesAttended || 0}
+                                </Text>
+                            </View>
+
+                            <View className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 w-[48%]">
+                                <Text className="text-gray-500 font-medium mb-1">Skipped</Text>
+                                <Text className="text-2xl font-bold text-red-500">
+                                    {stats.overall?.skippedClasses || 0}
+                                </Text>
+                            </View>
                         </View>
 
-                        <View className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 w-[48%]">
-                            <Text className="text-gray-500 font-medium mb-1">Attended</Text>
-                            <Text className="text-2xl font-bold text-green-600">
-                                {stats.overall?.totalAttended || 0}
-                            </Text>
-                        </View>
+                        {stats.subjectWise && Object.keys(stats.subjectWise).length > 0 && (
+                            <View className="mb-6">
+                                <Text className="text-xl font-bold text-gray-800 mb-4">Subject Breakdown</Text>
+                                {Object.entries(stats.subjectWise).map(([subject, data]: any, index) => (
+                                    <View key={index} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-3">
+                                        <View className="flex-row justify-between mb-2">
+                                            <Text className="text-gray-800 font-bold">{subject}</Text>
+                                            <Text className="text-blue-600 font-bold">{data.percentage}%</Text>
+                                        </View>
+                                        <View className="bg-gray-200 h-2 rounded-full overflow-hidden mb-2">
+                                            <View
+                                                className="bg-blue-500 h-2 rounded-full"
+                                                style={{ width: `${Math.min(Number(data.percentage), 100)}%` }}
+                                            />
+                                        </View>
+                                        <Text className="text-gray-500 text-xs">
+                                            Attended: {data.attended} / {data.total}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+                        )}
 
-                        <View className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 w-[48%]">
-                            <Text className="text-gray-500 font-medium mb-1">Skipped</Text>
-                            <Text className="text-2xl font-bold text-red-500">
-                                {stats.overall?.totalSkipped || 0}
-                            </Text>
-                        </View>
-                    </View>
+                        {stats.recentHistory && stats.recentHistory.length > 0 && (
+                            <View>
+                                <Text className="text-xl font-bold text-gray-800 mb-4">Recent Classes</Text>
+                                {stats.recentHistory.map((item: any, index: number) => (
+                                    <View key={index} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-3 flex-row justify-between items-center">
+                                        <View>
+                                            <Text className="text-gray-800 font-bold text-base">
+                                                {item.session?.subject || 'Unknown Class'}
+                                            </Text>
+                                            <Text className="text-gray-400 text-xs mt-1">
+                                                {new Date(item.timestamp).toLocaleString()}
+                                            </Text>
+                                        </View>
+                                        <View className="bg-green-100 px-3 py-1 rounded-full">
+                                            <Text className="text-green-600 font-bold text-xs uppercase">
+                                                {item.status}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ))}
+                            </View>
+                        )}
+                    </>
                 ) : (
                     <View className="bg-white p-6 rounded-2xl shadow-sm items-center">
                         <Text className="text-gray-500">No attendance data found.</Text>

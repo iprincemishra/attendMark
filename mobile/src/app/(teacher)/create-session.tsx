@@ -3,9 +3,16 @@ import { bleService } from '@/services/ble'
 import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import {
-    Alert, Text, TextInput, TouchableOpacity, View,
-    ActivityIndicator, KeyboardAvoidingView, Platform
+    Alert, Text, TouchableOpacity, View, ActivityIndicator, KeyboardAvoidingView, Platform, Modal, ScrollView
 } from 'react-native'
+
+const SUBJECTS = [
+    'Internet of Things',
+    'Data Warehouse and Data Mining',
+    'Java Programming',
+    'Linux Operating System',
+    'C # with .NET framework'
+];
 
 const CreateSessionScreen = () => {
 
@@ -13,10 +20,11 @@ const CreateSessionScreen = () => {
 
     const [subject, setSubject] = useState('')
     const [loading, setLoading] = useState(false)
+    const [dropdownOpen, setDropdownOpen] = useState(false)
 
     const handleStartSession = async () => {
         if (!subject.trim()) {
-            Alert.alert('Error', 'Enter subject name!!')
+            Alert.alert('Selection Required', 'Please select a subject to continue.')
             return
         }
         try {
@@ -26,26 +34,26 @@ const CreateSessionScreen = () => {
             const { success, message, data } = response.data
 
             if (!success || !data?.sessionCode) {
-                throw new Error(message || 'Failed to create session on backend')
+                throw new Error(message || 'Failed to create session on the server.')
             }
 
             await bleService.startBroadcasting(data.sessionCode)
 
-            Alert.alert('Session started! ', 'BLE broadcast live ho gaya hai.', [
+            Alert.alert('Session Started 🚀', 'The BLE broadcast is now active.', [
                 {
                     text: 'View Live',
                     onPress: () => {
                         router.replace({
                             pathname: '/(teacher)/session-live',
                             params: { sessionId: data.sessionId }
-                        })
+                        });
                     }
                 }
-            ])
+            ]);
 
         } catch (error: any) {
-            const errMessage = error.response?.data?.error || error.message || "Something went wrong"
-            Alert.alert("Broadcast Failed", errMessage)
+            const errMessage = error.response?.data?.error || error.message || "An unexpected error occurred.";
+            Alert.alert("Broadcast Failed", errMessage);
         } finally {
             setLoading(false)
         }
@@ -59,38 +67,39 @@ const CreateSessionScreen = () => {
             <View className="bg-blue-600 pt-16 pb-8 px-6 rounded-b-3xl shadow-md">
                 <Text className="text-blue-100 text-lg">New Attendance</Text>
                 <Text className="text-white text-3xl font-bold">Create Session</Text>
-                <Text className="text-blue-200 mt-1">BLE broadcast ke through attendance mark hogi</Text>
+                <Text className="text-blue-200 mt-1">Select a subject to initialize the attendance session</Text>
             </View>
 
             <View className="px-6 -mt-4">
                 <View className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
 
-                    <Text className="text-gray-700 text-xs font-semibold mb-2 uppercase tracking-wider">
-                        Subject Name
+                    <Text className="text-gray-700 text-xs font-semibold mt-4 mb-2 uppercase tracking-wider">
+                        Select Subject
                     </Text>
-                    <TextInput
-                        className="bg-gray-50 border border-gray-200 text-gray-900 px-4 py-4 rounded-xl text-base"
-                        placeholder="e.g. Data Structures"
-                        placeholderTextColor="#9ca3af"
-                        value={subject}
-                        onChangeText={setSubject}
-                        autoCapitalize="words"
-                        editable={!loading}
-                        returnKeyType="go"
-                        onSubmitEditing={handleStartSession}
-                    />
+
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => setDropdownOpen(true)}
+                        disabled={loading}
+                        className="bg-gray-50 border border-gray-200 px-4 py-4 rounded-xl flex-row justify-between items-center"
+                    >
+                        <Text className={subject ? "text-gray-900 text-base font-medium" : "text-gray-400 text-base"}>
+                            {subject || "Tap to choose subject..."}
+                        </Text>
+                        <Text className="text-gray-400 text-xs">▼</Text>
+                    </TouchableOpacity>
 
                     <View className="flex-row items-center bg-blue-50 rounded-xl p-4 mt-5">
                         <View className="w-2 h-2 rounded-full bg-blue-500 mr-3" />
                         <Text className="text-blue-700 text-xs flex-1">
-                            Session start karte hi phone BLE broadcast karega. Students 10-15 meter ke andar apna attendance mark kar payenge.
+                            This device will begin broadcasting a BLE signal immediately. Students within a 10-15 meter radius can mark their attendance.
                         </Text>
                     </View>
 
                     <TouchableOpacity
                         onPress={handleStartSession}
-                        disabled={loading}
-                        className={`py-4 rounded-xl items-center shadow-lg shadow-blue-500/30 mt-6 ${loading ? 'bg-blue-400' : 'bg-blue-600'}`}
+                        disabled={loading || !subject}
+                        className={`py-4 rounded-xl items-center shadow-lg mt-6 ${loading || !subject ? 'bg-blue-300 shadow-none' : 'bg-blue-600 shadow-blue-500/30'}`}
                     >
                         {loading ? (
                             <ActivityIndicator size="small" color="#ffffff" />
@@ -108,6 +117,44 @@ const CreateSessionScreen = () => {
                     </TouchableOpacity>
                 </View>
             </View>
+            <Modal
+                visible={dropdownOpen}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setDropdownOpen(false)}
+            >
+                <TouchableOpacity
+                    className="flex-1 bg-black/40 justify-center items-center px-6"
+                    activeOpacity={1}
+                    onPress={() => setDropdownOpen(false)}
+                >
+                    <View className="bg-white w-full rounded-3xl p-2 shadow-2xl">
+                        <View className="p-4 border-b border-gray-100 flex-row justify-between items-center">
+                            <Text className="text-gray-800 font-bold text-lg">BCA 5th Sem Subjects</Text>
+                        </View>
+
+                        <ScrollView className="max-h-80">
+                            {SUBJECTS.map((item, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    className={`p-4 mx-2 my-1 rounded-xl flex-row justify-between items-center ${subject === item ? 'bg-blue-50' : 'bg-transparent'}`}
+                                    onPress={() => {
+                                        setSubject(item);
+                                        setDropdownOpen(false);
+                                    }}
+                                >
+                                    <Text className={`text-base ${subject === item ? 'text-blue-600 font-bold' : 'text-gray-700'}`}>
+                                        {item}
+                                    </Text>
+                                    {subject === item && (
+                                        <Text className="text-blue-600 font-bold">✓</Text>
+                                    )}
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
         </KeyboardAvoidingView>
     )
 }

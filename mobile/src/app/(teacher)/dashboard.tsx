@@ -3,6 +3,7 @@ import { api } from '@/services/api';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Feather, Ionicons } from '@expo/vector-icons';
 
 const TeacherDashboard = () => {
 
@@ -77,7 +78,7 @@ const TeacherDashboard = () => {
                     className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-8 items-center flex-row"
                 >
                     <View className="bg-blue-100 p-4 rounded-full mr-4">
-                        <Text className="text-3xl">📝</Text>
+                        <Feather name="edit-3" size={28} color="#2563eb" />
                     </View>
                     <View className="flex-1">
                         <Text className="text-xl font-bold text-gray-800">Start New Class</Text>

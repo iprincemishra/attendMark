@@ -66,7 +66,6 @@ const ScannerScreen = () => {
         try {
             setLoading(true);
 
-            // ⚠️ Fix: getDeviceUuid fail hone par user context se fallback lo
             const deviceId = (await getDeviceUuid()) || user?.deviceId;
 
             if (!deviceId) {
@@ -86,7 +85,7 @@ const ScannerScreen = () => {
                 throw new Error(message || 'Failed to mark attendance');
             }
 
-            Alert.alert('Success! 🎉', 'Teri attendance lag gayi bhai!', [
+            Alert.alert('Success! ', 'Your attendance has been marked successfully.', [
                 { text: 'OK', onPress: () => router.back() }
             ]);
         } catch (error: any) {
