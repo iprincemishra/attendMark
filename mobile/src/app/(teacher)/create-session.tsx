@@ -6,6 +6,7 @@ import {
     Text, TouchableOpacity, View, ActivityIndicator, KeyboardAvoidingView, Platform, Modal, ScrollView
 } from 'react-native'
 import CustomAlert from '@/components/CustomAlert'
+import { Ionicons } from '@expo/vector-icons'
 
 const SUBJECTS = [
     'Internet of Things',
@@ -64,8 +65,8 @@ const CreateSessionScreen = () => {
             await bleService.startBroadcasting(data.sessionCode)
 
             showAlert(
-                'Session Started 🚀',
-                'The BLE broadcast is now active.',
+                'Session Started !!!',
+                'Attendance session is now active.',
                 'success',
                 () => {
                     closeAlert()
@@ -77,8 +78,14 @@ const CreateSessionScreen = () => {
             )
 
         } catch (error: any) {
-            const errMessage = error.response?.data?.error || error.message || "An unexpected error occurred.";
-            showAlert("Broadcast Failed", errMessage, 'error')
+            const errMsg = error.response?.data?.error || error.message || "An unexpected error occurred.";
+
+            let displayMsg = errMsg;
+
+            if (errMsg.includes('not supported') || errMsg.toLowerCase().includes('bluetooth')) {
+                displayMsg = "Please turn on your device's Bluetooth to start broadcasting.";
+            }
+            showAlert("Broadcast Failed", displayMsg, 'error');
         } finally {
             setLoading(false)
         }
@@ -108,10 +115,10 @@ const CreateSessionScreen = () => {
                         disabled={loading}
                         className="bg-gray-50 border border-gray-200 px-4 py-4 rounded-xl flex-row justify-between items-center"
                     >
-                        <Text className={subject ? "text-gray-900 text-base font-medium" : "text-gray-400 text-base"}>
+                        <Text className={subject ? "text-gray-800 text-base font-medium" : "text-gray-400 text-base"}>
                             {subject || "Tap to choose subject..."}
                         </Text>
-                        <Text className="text-gray-400 text-xs">▼</Text>
+                        <Text className="text-gray-500 text-xs">▼</Text>
                     </TouchableOpacity>
 
                     <View className="flex-row items-center bg-blue-50 rounded-xl p-4 mt-5">

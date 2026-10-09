@@ -1,50 +1,12 @@
 import { useAuth } from '@/context/AuthContext';
-import { api } from '@/services/api';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
 const TeacherDashboard = () => {
 
-    const params = useLocalSearchParams();
     const router = useRouter();
     const { user, logout } = useAuth();
-
-    const [activeSession, setActiveSession] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-
-    const fetchActiveSession = async () => {
-        try {
-            setLoading(true);
-            if (params.sessionId) {
-                const res = await api.get(`/attendance/${params.sessionId}`);
-                if (res.data.success && res.data.data) {
-                    setActiveSession(res.data.data);
-                    setLoading(false);
-                    setRefreshing(false);
-                    return;
-                }
-            }
-            setActiveSession(null);
-        } catch (error: any) {
-            console.error('Error fetching active session:', error);
-            setActiveSession(null);
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchActiveSession();
-    }, [params.sessionId]);
-
-    const onRefresh = useCallback(() => {
-        setRefreshing(true);
-        fetchActiveSession();
-    }, [params.sessionId]);
 
     const handleLogout = async () => {
         await logout();
@@ -52,10 +14,7 @@ const TeacherDashboard = () => {
     };
 
     return (
-        <ScrollView
-            className="flex-1 bg-gray-50"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        >
+        <ScrollView className="flex-1 bg-gray-50">
             <View className="bg-blue-600 pt-16 pb-8 px-6 rounded-b-3xl shadow-md">
                 <View className="flex-row justify-between items-center">
                     <View>
@@ -65,14 +24,16 @@ const TeacherDashboard = () => {
                     </View>
                     <TouchableOpacity
                         onPress={handleLogout}
-                        className="bg-blue-700 p-2 rounded-full border border-blue-500"
+                        className="bg-blue-700 px-3 py-2 rounded-full border border-blue-500 flex flex-row justify-center items-center"
                     >
+                        <Feather name='log-out' color={"#ffffff70"} size={20} />
                         <Text className="text-white font-bold px-2">Logout</Text>
                     </TouchableOpacity>
                 </View>
             </View>
 
             <View className="p-6">
+                <Text className="text-gray-500 text-sm font-semibold mb-3 uppercase tracking-wider">Quick Actions</Text>
                 <TouchableOpacity
                     onPress={() => router.push('/(teacher)/create-session')}
                     className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-8 items-center flex-row"
@@ -82,42 +43,17 @@ const TeacherDashboard = () => {
                     </View>
                     <View className="flex-1">
                         <Text className="text-xl font-bold text-gray-800">Start New Class</Text>
-                        <Text className="text-gray-500 mt-1">Create a session & broadcast BLE</Text>
+                        <Text className="text-gray-500 mt-1">Create a attendance session for your subject</Text>
                     </View>
                     <Feather name="arrow-right" size={24} color="#3b82f6" />
                 </TouchableOpacity>
 
-                <Text className="text-xl font-bold text-gray-800 mb-4">Current Status</Text>
-
-                {loading && !refreshing ? (
-                    <ActivityIndicator size="large" color="#2563eb" className="mt-8" />
-                ) : activeSession ? (
-                    <TouchableOpacity
-                        onPress={() => router.push({
-                            pathname: '/(teacher)/session-live',
-                            params: { sessionId: activeSession.sessionId || activeSession.id }
-                        })}
-                        className="bg-blue-50 p-6 rounded-3xl shadow-sm border border-blue-200 flex-row justify-between items-center"
-                    >
-                        <View>
-                            <View className="flex-row items-center mb-2">
-                                <View className="w-3 h-3 rounded-full bg-green-500 mr-2" />
-                                <Text className="text-green-600 font-bold uppercase tracking-widest text-xs">Live Broadcasting</Text>
-                            </View>
-                            <Text className="text-2xl font-bold text-gray-800">{activeSession.subject}</Text>
-                            <Text className="text-gray-500 mt-1 font-medium">Tap to view live attendance</Text>
-                        </View>
-                        <Ionicons name="radio-button-on" size={40} color="#2563eb" />
-                    </TouchableOpacity>
-                ) : (
-                    <View className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 items-center">
-                        <Feather name="wifi-off" size={48} color="#9ca3af" style={{ marginBottom: 16 }} />
-                        <Text className="text-lg font-bold text-gray-700">No active classes</Text>
-                        <Text className="text-gray-400 text-center mt-2">
-                            When you start a class, it will appear here while broadcasting.
-                        </Text>
-                    </View>
-                )}
+                <View className="mt-8 bg-blue-50 p-6 rounded-3xl border border-blue-100 border-dashed items-center">
+                    <Feather name="bar-chart-2" size={32} color="#93c5fd" style={{ marginBottom: 12 }} />
+                    <Text className="text-blue-400/60 font-bold text-center">
+                        Detailed attendance analytics and history export will be available here soon.
+                    </Text>
+                </View>
             </View>
         </ScrollView>
     );

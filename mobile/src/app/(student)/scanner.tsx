@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useRouter } from 'expo-router';
 import { bleService } from "@/services/ble";
 import { api } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { getDeviceUuid } from "@/utils/secureStore";
+import { Ionicons } from "@expo/vector-icons";
+import CustomAlert from "@/components/CustomAlert";
 
 const ScannerScreen = () => {
     const router = useRouter();
@@ -17,8 +19,36 @@ const ScannerScreen = () => {
         deviceName: string
     } | null>(null);
 
+    const [alert, setAlert] = useState({
+        visible: false,
+        title: '',
+        message: '',
+        type: 'info' as 'success' | 'error' | 'info',
+        onConfirm: undefined as (() => void) | undefined
+    })
+
+    const showAlert = (
+        title: string,
+        message: string,
+        type: 'success' | 'error' | 'info' = 'info',
+        onConfirm?: () => void
+    ) => setAlert({ visible: true, title, message, type, onConfirm })
+
+    const closeAlert = () => setAlert(prev => ({ ...prev, visible: false }))
+
+    const scanningRef = useRef(false);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const clearTimer = () => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+        }
+    };
+
     useEffect(() => {
         return () => {
+            clearTimer();
             bleService.stopScanning();
         };
     }, []);
@@ -26,13 +56,17 @@ const ScannerScreen = () => {
     const startScan = async () => {
         try {
             setScanning(true);
+            scanningRef.current = true
             setFoundSession(null);
+            clearTimer()
 
             await bleService.startScanning((eventData: any) => {
 
                 const code = eventData?.parsedData || eventData;
                 const address = eventData?.deviceAddress || 'Teacher Beacon';
 
+                clearTimer()
+                scanningRef.current = false
 
                 setFoundSession({
                     sessionCode: code,
@@ -42,20 +76,34 @@ const ScannerScreen = () => {
                 setScanning(false);
             });
 
-            setTimeout(() => {
-                if (scanning) {
+            timeoutRef.current = setTimeout(() => {
+                if (scanningRef.current) {
                     stopScan();
-                    Alert.alert('Scan Timeout', 'No teacher device found nearby. Make sure you are in the classroom.');
+                    showAlert(
+                        'Scan Timeout',
+                        'No teacher device found nearby. Make sure you are in the classroom.',
+                        'error'
+                    );
                 }
             }, 15000);
 
         } catch (error: any) {
-            Alert.alert('Scan Error', error.message || 'Failed to start BLE scan');
             setScanning(false);
+            scanningRef.current = false;
+
+            const errMsg = error.message || 'Failed to start BLE scan';
+            let displayMsg = errMsg;
+            if (errMsg.includes('not supported') || errMsg.toLowerCase().includes('bluetooth')) {
+                displayMsg = "Please turn on your device's Bluetooth and Location to scan for classes.";
+            }
+
+            showAlert('Bluetooth Error', displayMsg, 'error');
         }
     };
 
     const stopScan = () => {
+        clearTimer()
+        scanningRef.current = false
         bleService.stopScanning();
         setScanning(false);
     };
@@ -67,9 +115,8 @@ const ScannerScreen = () => {
             setLoading(true);
 
             const deviceId = (await getDeviceUuid()) || user?.deviceId;
-
             if (!deviceId) {
-                Alert.alert("Authentication Error", "Device ID missing. Please re-login.");
+                showAlert("Authentication Error", "Device ID missing. Please re-login.", 'error');
                 setLoading(false);
                 return;
             }
@@ -85,12 +132,18 @@ const ScannerScreen = () => {
                 throw new Error(message || 'Failed to mark attendance');
             }
 
-            Alert.alert('Success! ', 'Your attendance has been marked successfully.', [
-                { text: 'OK', onPress: () => router.back() }
-            ]);
+            showAlert(
+                'Success!',
+                'Your attendance has been marked successfully.',
+                'success',
+                () => {
+                    closeAlert();
+                    router.back();
+                }
+            );
         } catch (error: any) {
             const errMessage = error.response?.data?.message || error.message || 'Something went wrong';
-            Alert.alert('Attendance Failed', errMessage);
+            showAlert('Attendance Failed', errMessage, 'error');
         } finally {
             setLoading(false);
         }
@@ -128,16 +181,16 @@ const ScannerScreen = () => {
                             onPress={startScan}
                         >
                             <Text className="text-white font-bold text-2xl tracking-wider">SCAN</Text>
+                            <Text className="text-white/10 font-bold text-5xl tracking-wider absolute">SCAN</Text>
                         </TouchableOpacity>
                     )}
                 </View>
             ) : (
                 <View className="w-full bg-blue-50 p-6 rounded-3xl border border-blue-100 items-center shadow-sm">
                     <View className="bg-white p-4 rounded-full mb-4 shadow-sm">
-                        <Text className="text-4xl">📡</Text>
+                        <Ionicons name="radio" size={36} color="#2563eb" />
                     </View>
                     <Text className="text-2xl font-bold text-gray-800 mb-1">Session Found!</Text>
-                    <Text className="text-gray-500 mb-8 font-medium">Device: {foundSession.deviceName}</Text>
 
                     <TouchableOpacity
                         className={`w-full py-4 rounded-2xl items-center shadow-md ${loading ? 'bg-blue-300' : 'bg-blue-600'}`}
@@ -160,6 +213,15 @@ const ScannerScreen = () => {
                     </TouchableOpacity>
                 </View>
             )}
+            <CustomAlert
+                visible={alert.visible}
+                title={alert.title}
+                message={alert.message}
+                type={alert.type}
+                onClose={closeAlert}
+                onConfirm={alert.onConfirm}
+                confirmText={alert.onConfirm ? 'OK' : 'Got it'}
+            />
         </View>
     )
 }
