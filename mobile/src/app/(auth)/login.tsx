@@ -23,8 +23,16 @@ export default function LoginScreen() {
         type: 'info' as 'success' | 'error' | 'info',
     });
 
-    const showAlert = (title: string, message: string, type: 'success' | 'error' | 'info' = 'info') => {
-        setAlert({ visible: true, title, message, type });
+    const showAlert = (
+        title: string,
+        message: string,
+        type: 'success' | 'error' | 'info' = 'info') => {
+        setAlert({
+            visible: true,
+            title,
+            message,
+            type
+        });
     };
 
     const closeAlert = () => setAlert(prev => ({ ...prev, visible: false }));

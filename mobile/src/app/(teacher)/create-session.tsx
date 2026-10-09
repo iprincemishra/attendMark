@@ -3,8 +3,9 @@ import { bleService } from '@/services/ble'
 import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import {
-    Alert, Text, TouchableOpacity, View, ActivityIndicator, KeyboardAvoidingView, Platform, Modal, ScrollView
+    Text, TouchableOpacity, View, ActivityIndicator, KeyboardAvoidingView, Platform, Modal, ScrollView
 } from 'react-native'
+import CustomAlert from '@/components/CustomAlert'
 
 const SUBJECTS = [
     'Internet of Things',
@@ -22,9 +23,32 @@ const CreateSessionScreen = () => {
     const [loading, setLoading] = useState(false)
     const [dropdownOpen, setDropdownOpen] = useState(false)
 
+    const [alert, setAlert] = useState({
+        visible: false,
+        title: '',
+        message: '',
+        type: 'info' as 'success' | 'error' | 'info',
+        onConfirm: undefined as (() => void) | undefined
+    })
+
+    const showAlert = (
+        title: string,
+        message: string,
+        type: 'success' | 'error' | 'info' = 'info',
+        onConfirm?: () => void
+    ) => setAlert({
+        visible: true,
+        title,
+        message,
+        type,
+        onConfirm
+    })
+
+    const closeAlert = () => setAlert(prev => ({ ...prev, visible: false }))
+
     const handleStartSession = async () => {
         if (!subject.trim()) {
-            Alert.alert('Selection Required', 'Please select a subject to continue.')
+            showAlert('Selection Required', 'Please select a subject to continue.', 'error')
             return
         }
         try {
@@ -39,21 +63,22 @@ const CreateSessionScreen = () => {
 
             await bleService.startBroadcasting(data.sessionCode)
 
-            Alert.alert('Session Started 🚀', 'The BLE broadcast is now active.', [
-                {
-                    text: 'View Live',
-                    onPress: () => {
-                        router.replace({
-                            pathname: '/(teacher)/session-live',
-                            params: { sessionId: data.sessionId }
-                        });
-                    }
+            showAlert(
+                'Session Started 🚀',
+                'The BLE broadcast is now active.',
+                'success',
+                () => {
+                    closeAlert()
+                    router.replace({
+                        pathname: '/(teacher)/session-live',
+                        params: { sessionId: data.sessionId }
+                    })
                 }
-            ]);
+            )
 
         } catch (error: any) {
             const errMessage = error.response?.data?.error || error.message || "An unexpected error occurred.";
-            Alert.alert("Broadcast Failed", errMessage);
+            showAlert("Broadcast Failed", errMessage, 'error')
         } finally {
             setLoading(false)
         }
@@ -155,6 +180,15 @@ const CreateSessionScreen = () => {
                     </View>
                 </TouchableOpacity>
             </Modal>
+            <CustomAlert
+                visible={alert.visible}
+                title={alert.title}
+                message={alert.message}
+                type={alert.type}
+                onClose={closeAlert}
+                onConfirm={alert.onConfirm}
+                confirmText={alert.onConfirm ? 'View Live' : 'OK'}
+            />
         </KeyboardAvoidingView>
     )
 }

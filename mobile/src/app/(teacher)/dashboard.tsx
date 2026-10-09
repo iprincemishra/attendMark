@@ -84,7 +84,7 @@ const TeacherDashboard = () => {
                         <Text className="text-xl font-bold text-gray-800">Start New Class</Text>
                         <Text className="text-gray-500 mt-1">Create a session & broadcast BLE</Text>
                     </View>
-                    <Text className="text-2xl text-blue-500">→</Text>
+                    <Feather name="arrow-right" size={24} color="#3b82f6" />
                 </TouchableOpacity>
 
                 <Text className="text-xl font-bold text-gray-800 mb-4">Current Status</Text>
@@ -107,11 +107,11 @@ const TeacherDashboard = () => {
                             <Text className="text-2xl font-bold text-gray-800">{activeSession.subject}</Text>
                             <Text className="text-gray-500 mt-1 font-medium">Tap to view live attendance</Text>
                         </View>
-                        <Text className="text-4xl">📡</Text>
+                        <Ionicons name="radio-button-on" size={40} color="#2563eb" />
                     </TouchableOpacity>
                 ) : (
                     <View className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 items-center">
-                        <Text className="text-5xl mb-4">📴</Text>
+                        <Feather name="wifi-off" size={48} color="#9ca3af" style={{ marginBottom: 16 }} />
                         <Text className="text-lg font-bold text-gray-700">No active classes</Text>
                         <Text className="text-gray-400 text-center mt-2">
                             When you start a class, it will appear here while broadcasting.

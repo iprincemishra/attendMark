@@ -3,6 +3,7 @@ import { api } from '@/services/api';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Feather, Ionicons } from '@expo/vector-icons';
 
 const StudentDashboard = () => {
     const router = useRouter();
@@ -67,13 +68,15 @@ const StudentDashboard = () => {
                     className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-8 items-center flex-row"
                 >
                     <View className="bg-blue-100 p-4 rounded-full mr-4">
-                        <Text className="text-3xl">📡</Text>
+                        <Feather name="radio" size={28} color="#2563eb" />
                     </View>
                     <View className="flex-1">
                         <Text className="text-xl font-bold text-gray-800">Mark Attendance</Text>
                         <Text className="text-gray-500 mt-1">Scan for teacher's active class</Text>
                     </View>
-                    <Text className="text-2xl text-blue-500">→</Text>
+                    <View>
+                        <Feather name="arrow-right" size={24} color="#3b82f6" />
+                    </View>
                 </TouchableOpacity>
 
                 <Text className="text-xl font-bold text-gray-800 mb-4">My Overview</Text>
@@ -141,8 +144,8 @@ const StudentDashboard = () => {
                                                 {new Date(item.timestamp).toLocaleString()}
                                             </Text>
                                         </View>
-                                        <View className="bg-green-100 px-3 py-1 rounded-full">
-                                            <Text className="text-green-600 font-bold text-xs uppercase">
+                                        <View className={`px-3 py-1 rounded-full ${item.status === 'PRESENT' ? 'bg-green-100' : 'bg-red-100'}`}>
+                                            <Text className={`${item.status === 'PRESENT' ? 'text-green-600' : 'text-red-600'} font-bold text-xs uppercase`}>
                                                 {item.status}
                                             </Text>
                                         </View>
@@ -153,6 +156,7 @@ const StudentDashboard = () => {
                     </>
                 ) : (
                     <View className="bg-white p-6 rounded-2xl shadow-sm items-center">
+                        <Ionicons name="file-tray-outline" size={48} color="#9ca3af" style={{ marginBottom: 12 }} />
                         <Text className="text-gray-500">No attendance data found.</Text>
                     </View>
                 )}
