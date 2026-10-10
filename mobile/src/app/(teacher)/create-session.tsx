@@ -6,7 +6,7 @@ import {
     Text, TouchableOpacity, View, ActivityIndicator, KeyboardAvoidingView, Platform, Modal, ScrollView
 } from 'react-native'
 import CustomAlert from '@/components/CustomAlert'
-import { Ionicons } from '@expo/vector-icons'
+import * as Haptics from "expo-haptics"
 
 const SUBJECTS = [
     'Internet of Things',
@@ -63,6 +63,8 @@ const CreateSessionScreen = () => {
             }
 
             await bleService.startBroadcasting(data.sessionCode)
+
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
             showAlert(
                 'Session Started !!!',
@@ -171,6 +173,7 @@ const CreateSessionScreen = () => {
                                     key={index}
                                     className={`p-4 mx-2 my-1 rounded-xl flex-row justify-between items-center ${subject === item ? 'bg-blue-50' : 'bg-transparent'}`}
                                     onPress={() => {
+                                        Haptics.selectionAsync();
                                         setSubject(item);
                                         setDropdownOpen(false);
                                     }}

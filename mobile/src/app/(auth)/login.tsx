@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    Image,
+    ScrollView
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
@@ -98,95 +108,133 @@ export default function LoginScreen() {
         }
     };
 
-    return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            className="flex-1 bg-slate-950 justify-center px-6"
+    return (<KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1 bg-white"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    >
+        <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+            className="flex-1"
+            showsVerticalScrollIndicator={false}
         >
-            <View className="bg-slate-900 px-8 py-6 rounded-3xl border border-slate-800 shadow-xl mb-20">
-
-                <View className="mb-8">
-                    <Text className="text-4xl font-bold text-white mb-2">AttendMark</Text>
-                    <Text className="text-slate-400 text-sm">Sign in to your account</Text>
-                </View>
-
-                <View className="flex-row bg-slate-950 rounded-xl p-1 mb-6 border border-slate-800">
-                    <TouchableOpacity
-                        onPress={() => setRole('student')}
-                        className={`flex-1 py-3 rounded-lg items-center ${role === 'student' ? 'bg-blue-600' : 'bg-transparent'}`}
-                    >
-                        <Text className={`font-semibold ${role === 'student' ? 'text-white' : 'text-slate-400'}`}>
-                            Student
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={() => setRole('teacher')}
-                        className={`flex-1 py-3 rounded-lg items-center ${role === 'teacher' ? 'bg-blue-600' : 'bg-transparent'}`}
-                    >
-                        <Text className={`font-semibold ${role === 'teacher' ? 'text-white' : 'text-slate-400'}`}>
-                            Teacher
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-
-                <View className="mb-4">
-                    <Text className="text-slate-300 text-xs font-semibold mb-2 uppercase tracking-wider">Email Address</Text>
-                    <TextInput
-                        className="bg-slate-950 border border-slate-800 text-white px-4 py-4 rounded-xl text-base mb-5"
-                        placeholder={role === 'student' ? "student@gccba.edu.in" : "teacher@gccba.edu.in"}
-                        placeholderTextColor="#475569"
-                        value={email}
-                        onChangeText={setEmail}
-                        autoCapitalize="none"
-                        keyboardType="email-address"
+            <View className="pb-16 flex-1 bg-white justify-center px-14 gap-24">
+                <View className="items-center mt-4">
+                    <Image
+                        source={require('@/assets/images/icon.png')}
+                        className="w-20 h-20 mb-3"
+                        resizeMode="contain"
                     />
+                    <Text className="text-3xl font-black text-gray-900 tracking-tight">
+                        AttendMark
+                    </Text>
+                    <Text className="text-gray-400 text-sm mt-1">
+                        Smart Proximity Attendance
+                    </Text>
+                </View>
 
-                    {role === 'teacher' ? (
-                        <>
-                            <Text className="text-slate-300 text-xs font-semibold mb-2 uppercase tracking-wider">Password</Text>
-                            <TextInput
-                                className="bg-slate-950 border border-slate-800 text-white px-4 py-4 rounded-xl text-base mb-8"
-                                placeholder="Enter your password"
-                                placeholderTextColor="#475569"
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                            />
-                        </>
-                    ) : (
-                        <>
-                            <Text className="text-slate-300 text-xs font-semibold mb-2 uppercase tracking-wider">Roll Number</Text>
-                            <TextInput
-                                className="bg-slate-950 border border-slate-800 text-white px-4 py-4 rounded-xl text-base mb-8"
-                                placeholder="e.g. 2433029/24"
-                                placeholderTextColor="#475569"
-                                value={rollNumber}
-                                onChangeText={setRollNumber}
-                                keyboardType="default"
-                            />
-                        </>
-                    )}
+                <View className="my-8">
+                    <View className="flex-row bg-gray-100 p-1 rounded-2xl mb-6">
+                        <TouchableOpacity
+                            onPress={() => setRole('student')}
+                            className={`flex-1 py-3 rounded-lg items-center ${role === 'student' ? 'bg-blue-600' : 'bg-transparent'}`}
+                            activeOpacity={0.8}
+                        >
+                            <Text className={`font-bold text-sm ${role === 'student' ? 'text-white' : 'text-gray-500'}`}>
+                                Student
+                            </Text>
+                        </TouchableOpacity>
 
-                    {loading ? (
-                        <ActivityIndicator size="large" color="#3b82f6" />
-                    ) : (
+                        <TouchableOpacity
+                            onPress={() => setRole('teacher')}
+                            className={`flex-1 py-3 rounded-lg items-center ${role === 'teacher' ? 'bg-blue-600' : 'bg-transparent'}`}
+                            activeOpacity={0.8}
+                        >
+                            <Text className={`font-bold text-sm ${role === 'teacher' ? 'text-white' : 'text-gray-500'}`}>
+                                Teacher
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View className="space-y-4">
+                        <View>
+                            <Text className="text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Email Address</Text>
+                            <TextInput
+                                className="bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3.5 rounded-xl text-base"
+                                placeholder={role === 'student' ? "student@gccba.edu.in" : "teacher@gccba.edu.in"}
+                                placeholderTextColor="#9ca3af"
+                                value={email}
+                                onChangeText={setEmail}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
+                                returnKeyType="next"
+                            />
+
+                            {role === 'teacher' ? (
+                                <View className='mt-3'>
+                                    <Text className="text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Password</Text>
+                                    <TextInput
+                                        className="bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3.5 rounded-xl text-base"
+                                        placeholder="Enter your password"
+                                        placeholderTextColor="#9ca3af"
+                                        value={password}
+                                        onChangeText={setPassword}
+                                        secureTextEntry
+                                        returnKeyType="done"
+                                        onSubmitEditing={handleLogin}
+                                    />
+                                </View>
+                            ) : (
+                                <View className='mt-3'>
+                                    <Text className="text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Roll Number</Text>
+                                    <TextInput
+                                        className="bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3.5 rounded-xl text-base"
+                                        placeholder="e.g. 24330XX/24"
+                                        placeholderTextColor="#9ca3af"
+                                        value={rollNumber}
+                                        onChangeText={setRollNumber}
+                                        keyboardType="default"
+                                        returnKeyType="done"
+                                        onSubmitEditing={handleLogin}
+                                    />
+                                </View>
+                            )}
+                        </View>
                         <TouchableOpacity
                             onPress={handleLogin}
-                            className="bg-blue-600 py-4 rounded-xl items-center shadow-lg shadow-blue-500/30"
+                            disabled={loading}
+                            activeOpacity={0.8}
+                            className="bg-[#0083C3] py-4 rounded-xl items-center shadow-md shadow-[#0083C3]/30 mt-6"
                         >
-                            <Text className="text-white font-bold text-lg">Login</Text>
+                            {loading ? (
+                                <ActivityIndicator size="small" color="#ffffff" />
+                            ) : (
+                                <Text className="text-white font-bold text-base tracking-wide">
+                                    Sign In
+                                </Text>
+                            )}
                         </TouchableOpacity>
-                    )}
+                    </View>
+
+                </View>
+
+                <View className="items-center pb-2">
+                    <Text className="text-gray-400 text-xs font-medium">
+                        Version 1.0.0
+                    </Text>
+                    <Text className="text-gray-600 text-xs font-semibold mt-1">
+                        Developed by Prince Mishra
+                    </Text>
                 </View>
             </View>
-            <CustomAlert
-                visible={alert.visible}
-                title={alert.title}
-                message={alert.message}
-                type={alert.type}
-                onClose={closeAlert}
-            />
-        </KeyboardAvoidingView>
+        </ScrollView>
+        <CustomAlert
+            visible={alert.visible}
+            title={alert.title}
+            message={alert.message}
+            type={alert.type}
+            onClose={closeAlert}
+        />
+    </KeyboardAvoidingView>
     );
 }

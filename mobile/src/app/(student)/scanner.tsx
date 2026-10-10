@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getDeviceUuid } from "@/utils/secureStore";
 import { Ionicons } from "@expo/vector-icons";
 import CustomAlert from "@/components/CustomAlert";
+import * as Haptics from "expo-haptics"
 
 const ScannerScreen = () => {
     const router = useRouter();
@@ -54,6 +55,7 @@ const ScannerScreen = () => {
     }, []);
 
     const startScan = async () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         try {
             setScanning(true);
             scanningRef.current = true
@@ -132,6 +134,8 @@ const ScannerScreen = () => {
                 throw new Error(message || 'Failed to mark attendance');
             }
 
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
             showAlert(
                 'Success!',
                 'Your attendance has been marked successfully.',
@@ -142,6 +146,7 @@ const ScannerScreen = () => {
                 }
             );
         } catch (error: any) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             const errMessage = error.response?.data?.message || error.message || 'Something went wrong';
             showAlert('Attendance Failed', errMessage, 'error');
         } finally {
