@@ -159,7 +159,7 @@ const ScannerScreen = () => {
             <View className="items-center mb-12">
                 <Text className="text-3xl font-bold text-gray-800 mb-2">Scan for Class</Text>
                 <Text className="text-gray-500 text-center px-4">
-                    Ensure Bluetooth is on and you are physically present in the classroom.
+                    Ensure Bluetooth is on and you are in the classroom.
                 </Text>
             </View>
 
