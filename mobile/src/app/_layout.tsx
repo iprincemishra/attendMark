@@ -1,4 +1,4 @@
-import { Slot } from 'expo-router';
+import { Stack } from 'expo-router';
 import { AuthProvider } from '../context/AuthContext';
 import { View } from 'react-native';
 import '../../global.css';
@@ -6,8 +6,14 @@ import '../../global.css';
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <View className="flex-1 bg-slate-950">
-        <Slot />
+      <View className="flex-1 bg-gray-50">
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: 'fade',
+            contentStyle: { backgroundColor: '#f9fafb' },
+          }}
+        />
       </View>
     </AuthProvider>
   );

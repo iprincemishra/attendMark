@@ -25,7 +25,7 @@ export default function Index() {
   }, [token, user, isLoading, segments]);
 
   return (
-    <View className="flex-1 items-center justify-center bg-slate-950">
+    <View className="flex-1 items-center justify-center bg-gray-50">
       <ActivityIndicator size="large" color="#3b82f6" />
     </View>
   );
