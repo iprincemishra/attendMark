@@ -1,6 +1,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
 import { bleService } from '@/services/ble';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -59,7 +60,7 @@ const SessionLiveScreen = () => {
 
     useEffect(() => {
         fetchSession();
-        intervalRef.current = setInterval(fetchSession, 5000);
+        intervalRef.current = setInterval(fetchSession, 7000);
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
@@ -90,7 +91,7 @@ const SessionLiveScreen = () => {
     if (error) {
         return (
             <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center px-6">
-                <Text className="text-5xl mb-4">⚠️</Text>
+                <Feather name="alert-triangle" size={40} color="#dc2626" />
                 <Text className="text-lg font-bold text-gray-700 mb-2">{error}</Text>
                 <Text className="text-gray-400 text-center mb-6">Check your network or try refreshing.</Text>
                 <TouchableOpacity onPress={fetchSession} className="bg-blue-600 px-8 py-3 rounded-xl">
@@ -106,80 +107,65 @@ const SessionLiveScreen = () => {
 
     return (
         <SafeAreaView className="flex-1 bg-gray-50">
+            <View className="bg-blue-600 pt-16 pb-8 px-6 rounded-b-3xl shadow-md">
+                <View className="flex-row justify-between items-center mb-4">
+                    <View>
+                        <Text className="text-blue-100 text-sm">Live Session</Text>
+                        <Text className="text-white text-2xl font-bold">{session?.subject || 'Unknown Subject'}</Text>
+                    </View>
+                    <View className="bg-green-500/20 px-3 py-1 rounded-full flex-row items-center">
+                        <View className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse" />
+                        <Text className="text-green-300 text-xs font-bold uppercase">Live</Text>
+                    </View>
+                </View>
+
+                <View className="flex-row items-center justify-between bg-blue-700/50 p-4 rounded-2xl">
+                    <View className="flex-1 items-center">
+                        <Text className="text-white text-3xl font-bold">{markedCount}</Text>
+                        <Text className="text-blue-200 text-xs">Marked</Text>
+                    </View>
+                    <View className="w-px h-10 bg-blue-500 mx-4" />
+                    <View className="flex-1 items-center">
+                        <Text className="text-white text-3xl font-bold">{totalStudents}</Text>
+                        <Text className="text-blue-200 text-xs">Total</Text>
+                    </View>
+                    <View className="w-px h-10 bg-blue-500 mx-4" />
+                    <View className="flex-1 items-center">
+                        <Text className="text-white text-3xl font-bold">{percentage}%</Text>
+                        <Text className="text-blue-200 text-xs">Present</Text>
+                    </View>
+                </View>
+            </View>
+
             <ScrollView
-                className="flex-1"
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                className="flex-1 px-6 pt-6"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 24 }}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563eb']} tintColor="#2563eb" />}
             >
-                <View className="bg-blue-600 pt-16 pb-8 px-6 rounded-b-3xl shadow-md">
-                    <View className="flex-row justify-between items-center mb-4">
-                        <View>
-                            <Text className="text-blue-100 text-sm">Live Session</Text>
-                            <Text className="text-white text-2xl font-bold">{session?.subject || 'Unknown Subject'}</Text>
-                        </View>
-                        <View className="bg-green-500/20 px-3 py-1 rounded-full flex-row items-center">
-                            <View className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse" />
-                            <Text className="text-green-300 text-xs font-bold uppercase">Live</Text>
-                        </View>
-                    </View>
-
-                    <View className="flex-row items-center justify-between bg-blue-700/50 p-4 rounded-2xl">
-                        <View className="flex-1 items-center">
-                            <Text className="text-white text-3xl font-bold">{markedCount}</Text>
-                            <Text className="text-blue-200 text-xs">Marked</Text>
-                        </View>
-                        <View className="w-px h-10 bg-blue-500 mx-4" />
-                        <View className="flex-1 items-center">
-                            <Text className="text-white text-3xl font-bold">{totalStudents}</Text>
-                            <Text className="text-blue-200 text-xs">Total</Text>
-                        </View>
-                        <View className="w-px h-10 bg-blue-500 mx-4" />
-                        <View className="flex-1 items-center">
-                            <Text className="text-white text-3xl font-bold">{percentage}%</Text>
-                            <Text className="text-blue-200 text-xs">Present</Text>
-                        </View>
-                    </View>
+                <View className="flex-row justify-between items-center mb-4">
+                    <Text className="text-xl font-bold text-gray-800">Marked Students</Text>
+                    <Text className="text-gray-400 text-xs">Auto-refreshing every 7s</Text>
                 </View>
 
-                <View className="px-6 mt-4">
-                    <View className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                        <View className="flex-row justify-between mb-2">
-                            <Text className="text-gray-600 text-sm font-semibold">Attendance Progress</Text>
-                            <Text className="text-blue-600 text-sm font-bold">{percentage}%</Text>
-                        </View>
-                        <View className="bg-gray-200 h-2.5 rounded-full overflow-hidden">
-                            <View
-                                className="bg-blue-600 h-2.5 rounded-full"
-                                style={{ width: `${percentage}%` }}
-                            />
-                        </View>
+                {students.length > 0 ? (
+                    students.map((item: any, index: number) => (
+                        <StudentLiveItem
+                            key={item.id || index}
+                            name={item.student?.name || 'Unknown Student'}
+                            rollNumber={item.student?.rollNumber || 'N/A'}
+                            time={item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
+                        />
+                    ))
+                ) : (
+                    <View className="bg-white p-8 rounded-3xl border border-gray-100 items-center mt-2 shadow-sm">
+                        <Ionicons name="time-outline" size={32} color="#2563eb" />
+                        <Text className="text-base font-bold text-gray-700">Waiting for students...</Text>
+                        <Text className="text-gray-400 text-center text-xs mt-1">
+                            Students within 10-15 meters will appear here automatically.
+                        </Text>
                     </View>
-                </View>
-
-                <View className="px-6 mt-6 pb-8">
-                    <View className="flex-row justify-between items-center mb-4">
-                        <Text className="text-xl font-bold text-gray-800">Marked Students</Text>
-                        <Text className="text-gray-400 text-sm">Auto-refreshing every 5s</Text>
-                    </View>
-
-                    {students.length > 0 ? (
-                        students.map((item: any, index: number) => (
-                            <StudentLiveItem
-                                key={item.id || index}
-                                name={item.student?.name || 'Unknown Student'}
-                                rollNumber={item.student?.rollNumber || 'N/A'}
-                                time={item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
-                            />
-                        ))
-                    ) : (
-                        <View className="bg-white p-8 rounded-3xl border border-gray-100 items-center">
-                            <Text className="text-5xl mb-4">🕐</Text>
-                            <Text className="text-lg font-bold text-gray-700">Waiting for students...</Text>
-                            <Text className="text-gray-400 text-center mt-2">
-                                Students within 10-15 meters will appear here automatically.
-                            </Text>
-                        </View>
-                    )}
-                </View>
+                )}
             </ScrollView>
 
             <View className="p-6 bg-white border-t border-gray-100">

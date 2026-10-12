@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 
 interface CustomAlertProps {
     visible: boolean;
@@ -10,6 +10,7 @@ interface CustomAlertProps {
     onClose: () => void;
     onConfirm?: () => void;
     confirmText?: string;
+    hideCancel?: boolean;
 }
 
 const CustomAlert = ({
@@ -19,7 +20,8 @@ const CustomAlert = ({
     type = 'info',
     onClose,
     onConfirm,
-    confirmText = "OK"
+    confirmText = "OK",
+    hideCancel = false
 }: CustomAlertProps) => {
 
     const getIcon = () => {
@@ -39,7 +41,7 @@ const CustomAlert = ({
             transparent={true}
             visible={visible}
             animationType="fade"
-            onRequestClose={onClose}
+            onRequestClose={hideCancel ? () => { } : onClose}
         >
             <View className="flex-1 bg-black/50 justify-center items-center px-6">
                 <View className="bg-white w-full rounded-3xl p-6 shadow-2xl items-center">
@@ -55,7 +57,7 @@ const CustomAlert = ({
                     </Text>
 
                     <View className="flex-row w-full justify-between gap-3">
-                        {onConfirm && (
+                        {onConfirm && !hideCancel && (
                             <TouchableOpacity
                                 onPress={onClose}
                                 className="flex-1 py-3.5 rounded-xl bg-gray-100 items-center"

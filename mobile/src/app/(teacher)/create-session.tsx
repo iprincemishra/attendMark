@@ -198,6 +198,7 @@ const CreateSessionScreen = () => {
                 onClose={closeAlert}
                 onConfirm={alert.onConfirm}
                 confirmText={alert.onConfirm ? 'View Live' : 'OK'}
+                hideCancel={!!alert.onConfirm}
             />
         </KeyboardAvoidingView>
     )

@@ -273,6 +273,7 @@ export const getStudentAttendanceHistory = async (req: AuthenticatedRequest, res
         });
 
         const overallPercentage = overallTotal === 0 ? "0.00" : ((overallAttended / overallTotal) * 100).toFixed(2);
+        const recentHistory = attendanceRecords.slice(0, 3);
 
         return res.status(200).json({
             success: true,
@@ -285,7 +286,7 @@ export const getStudentAttendanceHistory = async (req: AuthenticatedRequest, res
                     percentage: `${overallPercentage}%`
                 },
                 subjectWise: subjectBreakdown,
-                recentHistory: attendanceRecords
+                recentHistory
             },
         });
     } catch (error: any) {

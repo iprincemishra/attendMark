@@ -5,7 +5,7 @@ import { bleService } from "@/services/ble";
 import { api } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { getDeviceUuid } from "@/utils/secureStore";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, Feather } from "@expo/vector-icons";
 import CustomAlert from "@/components/CustomAlert";
 import * as Haptics from "expo-haptics"
 
@@ -155,69 +155,94 @@ const ScannerScreen = () => {
     }
 
     return (
-        <View className="flex-1 bg-white items-center justify-center p-6">
-            <View className="items-center mb-12">
-                <Text className="text-3xl font-bold text-gray-800 mb-2">Scan for Class</Text>
-                <Text className="text-gray-500 text-center px-4">
-                    Ensure Bluetooth is on and you are in the classroom.
-                </Text>
+        <View className="flex-1 bg-gray-50">
+
+            <View className="bg-blue-600 pt-16 pb-8 rounded-b-3xl shadow-md">
+                <View className="flex-row items-center gap-5 px-6">
+                    <TouchableOpacity
+                        onPress={() => {
+                            stopScan()
+                            router.back()
+                        }}
+                        className="bg-white p-2.5 rounded-full border border-gray-200 shadow-sm"
+                    >
+                        <Feather name="arrow-left" size={20} color="#374151" />
+                    </TouchableOpacity>
+                    <View>
+                        <Text className="text-white text-3xl font-bold">Scan for Class</Text>
+                        <Text className="text-blue-200 mt-1 w-[330px]">Ensure Bluetooth is enabled and you are seated inside the classroom.</Text>
+                    </View>
+                </View>
             </View>
 
-            {!foundSession ? (
-                <View className="items-center justify-center h-64">
-                    {scanning ? (
-                        <View className="items-center">
-                            <View className="bg-blue-100 p-8 rounded-full mb-6">
-                                <ActivityIndicator size="large" color="#208AEF" />
+            <View className="flex-1 items-center justify-center px-6 pb-12">
+                {!foundSession ? (
+                    <View className="items-center justify-center w-full">
+                        {scanning ? (
+                            <View className="bg-white w-full max-w-sm p-8 rounded-3xl items-center shadow-sm border border-gray-100">
+                                <View className="bg-blue-50 p-6 rounded-full mb-6">
+                                    <ActivityIndicator size="large" color="#2563eb" />
+                                </View>
+                                <Text className="text-lg text-blue-600 font-bold mb-2">
+                                    Searching for Beacon...
+                                </Text>
+                                <Text className="text-gray-400 text-xs text-center mb-8">
+                                    Listening for active teacher broadcast signals nearby
+                                </Text>
+                                <TouchableOpacity
+                                    className="w-full bg-red-50 py-3.5 rounded-2xl border border-red-100 items-center"
+                                    onPress={stopScan}
+                                >
+                                    <Text className="text-red-500 font-bold text-sm">Cancel Scan</Text>
+                                </TouchableOpacity>
                             </View>
-                            <Text className="text-lg text-blue-500 font-semibold mb-6">
-                                Looking for Teacher's Signal...
-                            </Text>
-                            <TouchableOpacity
-                                className="bg-red-50 px-8 py-3 rounded-full border border-red-200"
-                                onPress={stopScan}
-                            >
-                                <Text className="text-red-500 font-bold">Stop Scan</Text>
-                            </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <TouchableOpacity
-                            className="bg-blue-500 h-48 w-48 rounded-full items-center justify-center shadow-2xl shadow-blue-400 border-4 border-blue-400"
-                            onPress={startScan}
-                        >
-                            <Text className="text-white font-bold text-2xl tracking-wider">SCAN</Text>
-                            <Text className="text-white/10 font-bold text-5xl tracking-wider absolute">SCAN</Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
-            ) : (
-                <View className="w-full bg-blue-50 p-6 rounded-3xl border border-blue-100 items-center shadow-sm">
-                    <View className="bg-white p-4 rounded-full mb-4 shadow-sm">
-                        <Ionicons name="radio" size={36} color="#2563eb" />
-                    </View>
-                    <Text className="text-2xl font-bold text-gray-800 mb-1">Session Found!</Text>
-
-                    <TouchableOpacity
-                        className={`w-full py-4 rounded-2xl items-center shadow-md ${loading ? 'bg-blue-300' : 'bg-blue-600'}`}
-                        onPress={markAttendance}
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <ActivityIndicator color="white" />
                         ) : (
-                            <Text className="text-white font-bold text-xl">Mark Present</Text>
+                            <View className="items-center">
+                                <TouchableOpacity
+                                    activeOpacity={0.85}
+                                    className="bg-blue-600 h-52 w-52 rounded-full items-center justify-center shadow-xl shadow-blue-500/30 border-8 border-blue-100"
+                                    onPress={startScan}
+                                >
+                                    <View className="items-center justify-center">
+                                        <Ionicons name="radio-outline" size={100} style={{ opacity: 0.3 }} color="white" />
+                                        <Text className="text-white absolute font-black text-3xl tracking-widest">SCAN</Text>
+                                    </View>
+                                </TouchableOpacity>
+                                <Text className="text-gray-400 text-xs mt-8 font-medium">Tap to start searching</Text>
+                            </View>
                         )}
-                    </TouchableOpacity>
+                    </View>
+                ) : (
+                    <View className="w-full max-w-sm bg-white p-8 rounded-3xl border border-gray-100 items-center shadow-xl">
+                        <View className="bg-green-50 p-4 rounded-full mb-4 shadow-sm border border-green-100">
+                            <Ionicons name="checkmark-circle" size={40} color="#16a34a" />
+                        </View>
+                        <Text className="text-2xl font-black text-gray-900 mb-1">Session Found!</Text>
+                        <Text className="text-gray-500 text-xs mb-8">Teacher broadcast detected successfully</Text>
 
-                    <TouchableOpacity
-                        className="mt-6 p-2"
-                        onPress={() => setFoundSession(null)}
-                        disabled={loading}
-                    >
-                        <Text className="text-gray-400 font-bold">Scan Again</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
+                        <TouchableOpacity
+                            className={`w-full py-4 rounded-2xl items-center shadow-md mb-3 ${loading ? 'bg-blue-300' : 'bg-blue-600 shadow-blue-500/20'}`}
+                            onPress={markAttendance}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="white" />
+                            ) : (
+                                <Text className="text-white font-bold text-base tracking-wide">Mark Present</Text>
+                            )}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            className="py-2 px-4"
+                            onPress={() => setFoundSession(null)}
+                            disabled={loading}
+                        >
+                            <Text className="text-gray-400 font-semibold text-sm">Scan Again</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </View>
+
             <CustomAlert
                 visible={alert.visible}
                 title={alert.title}

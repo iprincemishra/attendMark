@@ -43,48 +43,45 @@ const StudentDashboard = () => {
     };
 
     return (
-        <>
-
-            <View className='flex bg-gray-50'>
-                <View className="bg-blue-600 pt-16 pb-8 px-6 rounded-b-3xl shadow-md">
-                    <View className="flex-row justify-between items-center">
-                        <View>
-                            <Text className="text-blue-100 text-lg">Welcome back,</Text>
-                            <Text className="text-white text-3xl font-bold">{user?.name || 'Student'}</Text>
-                            <Text className="text-blue-200 mt-1">{user?.rollNumber || 'BCA Student'}</Text>
-                        </View>
-                        <TouchableOpacity
-                            onPress={handleLogout}
-                            className="bg-blue-700 p-2 rounded-full border border-blue-500"
-                        >
-                            <Text className="text-white font-bold px-2">Logout</Text>
-                        </TouchableOpacity>
+        <View className='flex-1 bg-gray-50'>
+            <View className="bg-blue-600 pt-16 pb-8 px-6 rounded-b-3xl shadow-md">
+                <View className="flex-row justify-between items-center">
+                    <View>
+                        <Text className="text-blue-100 text-lg">Welcome back,</Text>
+                        <Text className="text-white text-3xl font-bold">{user?.name || 'Student'}</Text>
+                        <Text className="text-blue-200 mt-1">{user?.rollNumber || 'BCA Student'}</Text>
                     </View>
-                </View>
-
-                <View className="p-6 pb-0">
                     <TouchableOpacity
-                        onPress={() => router.push('/(student)/scanner')}
-                        className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-8 items-center flex-row"
+                        onPress={handleLogout}
+                        className="bg-blue-700 p-2 rounded-full border border-blue-500"
                     >
-                        <View className="bg-blue-100 p-4 rounded-full mr-4">
-                            <Feather name="radio" size={28} color="#2563eb" />
-                        </View>
-                        <View className="flex-1">
-                            <Text className="text-xl font-bold text-gray-800">Mark Attendance</Text>
-                            <Text className="text-gray-500 mt-1">Scan for teacher's active class</Text>
-                        </View>
-                        <View>
-                            <Feather name="arrow-right" size={24} color="#3b82f6" />
-                        </View>
+                        <Text className="text-white font-bold px-2">Logout</Text>
                     </TouchableOpacity>
-
-                    <Text className="text-xl font-bold text-gray-800 mb-4">My Overview</Text>
                 </View>
             </View>
 
+            <View className="p-6 pb-0">
+                <TouchableOpacity
+                    onPress={() => router.push('/(student)/scanner')}
+                    className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-8 items-center flex-row"
+                >
+                    <View className="bg-blue-100 p-4 rounded-full mr-4">
+                        <Feather name="radio" size={28} color="#2563eb" />
+                    </View>
+                    <View className="flex-1">
+                        <Text className="text-xl font-bold text-gray-800">Mark Attendance</Text>
+                        <Text className="text-gray-500 mt-1">Scan for teacher's active class</Text>
+                    </View>
+                    <View>
+                        <Feather name="arrow-right" size={24} color="#3b82f6" />
+                    </View>
+                </TouchableOpacity>
+
+                <Text className="text-xl font-bold text-gray-800 mb-4">My Overview</Text>
+            </View>
+
             <ScrollView
-                className="flex-1  bg-gray-50 p-6 pt-0"
+                className="flex-1 bg-gray-50 p-6 pt-0"
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 16 }}
                 refreshControl={
@@ -94,11 +91,9 @@ const StudentDashboard = () => {
                 <View className='flex pb-10'>
 
                     {loading ? (
-                        <>
-                            <View className="py-10">
-                                <ActivityIndicator size="large" color="#208AEF" />
-                            </View>
-                        </>
+                        <View className="w-[100%] h-80 flex justify-center items-center">
+                            <ActivityIndicator size="large" color="#208AEF" />
+                        </View>
                     ) : stats ? (
                         <>
                             <View className="flex-row justify-between flex-wrap mb-6">
@@ -181,8 +176,7 @@ const StudentDashboard = () => {
                 <DeveloperBadge />
 
             </ScrollView>
-
-        </>
+        </View>
     );
 };
 
