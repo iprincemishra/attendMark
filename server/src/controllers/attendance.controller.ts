@@ -3,6 +3,7 @@ import { IApiResponse } from "../types/response.types.js";
 import { AuthenticatedRequest } from "../middleware/auth.middleware.js";
 import prisma from "../config/db.js";
 import crypto from 'crypto'
+import { timeStamp } from "console";
 
 export const createAttendanceSession = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
     try {
@@ -52,6 +53,10 @@ export const createAttendanceSession = async (req: AuthenticatedRequest, res: Re
 
 export const markAttendance = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
     try {
+        const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+        const CLOCK_DRIFT_MARGIN_MS = 2 * 60 * 1000;
+        const now = new Date();
+
         const studentId = req.user?.userId;
 
         const { sessionCode, deviceId, timestamp } = req.body;
@@ -86,11 +91,32 @@ export const markAttendance = async (req: AuthenticatedRequest, res: Response<IA
             });
         }
 
-        if (new Date() > session.expiresAt) {
+        const syncDeadline = new Date(session.expiresAt.getTime() + SIX_HOURS_MS)
+        if (now > syncDeadline) {
             return res.status(400).json({
                 success: false,
-                message: 'Attendance session has expired'
-            });
+                message: "Attendance sync window has closed. Entries must be submitted within 6 hours."
+            })
+        }
+
+        const parsedTimestamp = typeof timestamp === "number" ? timestamp : Number(timeStamp);
+        const scanTime = new Date(parsedTimestamp)
+
+        if (isNaN(scanTime.getTime()) || parsedTimestamp < 1000000000000) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid timestamp format. Send valid milliseconds (Date.now()) or ISO string."
+            })
+        }
+
+        const minAllowedScan = new Date(session.createdAt.getTime() - CLOCK_DRIFT_MARGIN_MS);
+        const maxAllowedScan = new Date(session.expiresAt.getTime() + CLOCK_DRIFT_MARGIN_MS);
+
+        if (scanTime < minAllowedScan || scanTime > maxAllowedScan) {
+            return res.status(400).json({
+                success: false,
+                message: "Scanned timestamp does not match the active session window."
+            })
         }
 
         const existingAttendance = await prisma.attendance.findFirst({
@@ -101,15 +127,6 @@ export const markAttendance = async (req: AuthenticatedRequest, res: Response<IA
             return res.status(400).json({
                 success: false,
                 message: 'Attendance already marked for this session'
-            });
-        }
-
-        const parsedTimestamp = typeof timestamp === 'number' ? timestamp : Number(timestamp);
-        const scanTime = new Date(parsedTimestamp);
-        if (isNaN(scanTime.getTime()) || parsedTimestamp < 1000000000000) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid timestamp format. Send valid milliseconds (Date.now()) or ISO string.'
             });
         }
 
