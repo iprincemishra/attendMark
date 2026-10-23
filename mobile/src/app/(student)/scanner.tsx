@@ -8,6 +8,8 @@ import { getDeviceUuid } from "@/utils/secureStore";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import CustomAlert from "@/components/CustomAlert";
 import * as Haptics from "expo-haptics"
+import NetInfo from "@react-native-community/netinfo"
+import { attendanceQueue } from "@/services/attendanceQueue";
 
 const ScannerScreen = () => {
     const router = useRouter();
@@ -122,11 +124,35 @@ const ScannerScreen = () => {
                 setLoading(false);
                 return;
             }
+            const timestamp = Date.now();
+            const sessionCode = foundSession.sessionCode
+
+            const netState = await NetInfo.fetch()
+
+            if (!netState.isConnected) {
+                await attendanceQueue.enqueue({
+                    sessionCode,
+                    deviceId,
+                    timestamp,
+                });
+
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                showAlert(
+                    'Saved Offline',
+                    'You are offline. Attendance saved locally and will sync automatically when connected.',
+                    'success',
+                    () => {
+                        closeAlert();
+                        router.back();
+                    }
+                );
+                return;
+            }
 
             const response = await api.post('/attendance/mark', {
-                sessionCode: foundSession.sessionCode,
-                deviceId: deviceId,
-                timestamp: Date.now(),
+                sessionCode,
+                deviceId,
+                timestamp
             });
 
             const { success, message } = response.data;
@@ -147,6 +173,29 @@ const ScannerScreen = () => {
             );
         } catch (error: any) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+            const isNetworkError = !error.response;
+            if (isNetworkError) {
+                const deviceId = (await getDeviceUuid()) || user?.deviceId;
+                if (deviceId) {
+                    await attendanceQueue.enqueue({
+                        sessionCode: foundSession.sessionCode,
+                        deviceId,
+                        timestamp: Date.now(),
+                    });
+                    showAlert(
+                        'Connection Lost',
+                        'Network drop detected. Attendance saved to offline queue and will sync later.',
+                        'info',
+                        () => {
+                            closeAlert();
+                            router.back();
+                        }
+                    );
+                    return;
+                }
+            }
+
             const errMessage = error.response?.data?.message || error.message || 'Something went wrong';
             showAlert('Attendance Failed', errMessage, 'error');
         } finally {
@@ -170,7 +219,7 @@ const ScannerScreen = () => {
                     </TouchableOpacity>
                     <View>
                         <Text className="text-white text-3xl font-bold">Scan for Class</Text>
-                        <Text className="text-blue-200 mt-1 w-[330px]">Ensure Bluetooth is enabled and you are seated inside the classroom.</Text>
+                        <Text className="text-blue-200 mt-1">Ensure Bluetooth is enabled.</Text>
                     </View>
                 </View>
             </View>
