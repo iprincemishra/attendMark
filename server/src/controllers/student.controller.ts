@@ -10,11 +10,11 @@ export const addSingleStudent = async (req: AuthenticatedRequest, res: Response<
 
     try {
 
-        const { name, email, rollNumber } = req.body;
-        if (!name || !email || !rollNumber) {
+        const { name, email, rollNumber, year } = req.body;
+        if (!name || !email || !rollNumber || !year) {
             return res.status(400).json({
                 success: false,
-                message: 'Name, email, and roll number are required'
+                message: 'Name, email, roll number, and year (e.g., BCA3) are required'
             });
         }
 
@@ -33,6 +33,7 @@ export const addSingleStudent = async (req: AuthenticatedRequest, res: Response<
                 name,
                 email,
                 rollNumber,
+                year,
                 role: 'STUDENT',
             },
         });
@@ -65,6 +66,8 @@ export const uploadStudentsCsv = async (req: AuthenticatedRequest, res: Response
             });
         }
 
+        const defaultYear = req.body.year
+
         const results: any[] = [];
         const bufferStream = Readable.from(req.file.buffer);
 
@@ -79,13 +82,22 @@ export const uploadStudentsCsv = async (req: AuthenticatedRequest, res: Response
                         .map(r => ({
                             name: r.name.trim(),
                             email: r.email.trim().toLowerCase(),
-                            rollNumber: r.rollNumber.trim().toUpperCase()
+                            rollNumber: r.rollNumber.trim().toUpperCase(),
+                            year: (r.year || defaultYear || '').trim()
                         }));
 
                     if (validRows.length === 0) {
                         return res.status(400).json({
                             success: false,
                             message: 'CSV is empty or missing required columns'
+                        });
+                    }
+
+                    const missingYear = validRows.find(r => !r.year);
+                    if (missingYear) {
+                        return res.status(400).json({
+                            success: false,
+                            message: 'Year (e.g., BCA3) is required for all students either in request body or CSV column'
                         });
                     }
 
@@ -114,6 +126,7 @@ export const uploadStudentsCsv = async (req: AuthenticatedRequest, res: Response
                         name: row.name,
                         email: row.email,
                         rollNumber: row.rollNumber,
+                        year: row.year,
                         role: 'STUDENT' as const
                     }));
 

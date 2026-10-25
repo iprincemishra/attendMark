@@ -20,6 +20,7 @@ model User {
   role         Role         @default(STUDENT)
   rollNumber   String?      @unique
   deviceId     String?      @unique
+  year         String?
   passwordHash String?
   updatedAt    DateTime     @updatedAt
   attendances  Attendance[]
@@ -31,6 +32,7 @@ model Session {
   teacherId   String
   teacher     User         @relation("TeacherSessions", fields: [teacherId], references: [id])
   subject     String
+  year        String
   sessionCode String       @unique @db.VarChar(8)
   expiresAt   DateTime
   createdAt   DateTime     @default(now())

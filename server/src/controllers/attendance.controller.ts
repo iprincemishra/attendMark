@@ -7,14 +7,14 @@ import { timeStamp } from "console";
 
 export const createAttendanceSession = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
     try {
-        const { subject, durationMinutes = 5 } = req.body
+        const { subject, year, durationMinutes = 5 } = req.body
 
         const teacherId = req.user?.userId
 
-        if (!subject) {
+        if (!subject || !year) {
             return res.status(400).json({
                 success: false,
-                message: "Subject name is required"
+                message: "Subject name and year (e.g., BCA3) are required"
             })
         }
 
@@ -25,6 +25,7 @@ export const createAttendanceSession = async (req: AuthenticatedRequest, res: Re
             data: {
                 teacherId: teacherId!,
                 subject,
+                year,
                 sessionCode,
                 expiresAt
             }
@@ -36,6 +37,7 @@ export const createAttendanceSession = async (req: AuthenticatedRequest, res: Re
             data: {
                 sessionId: session.id,
                 subject: session.subject,
+                year: session.year,
                 sessionCode: session.sessionCode,
                 expiresAt: session.expiresAt,
             }
