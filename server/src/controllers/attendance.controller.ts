@@ -3,11 +3,12 @@ import { IApiResponse } from "../types/response.types.js";
 import { AuthenticatedRequest } from "../middleware/auth.middleware.js";
 import prisma from "../config/db.js";
 import crypto from 'crypto'
-import { timeStamp } from "console";
+import { Parser } from "json2csv"
 
 export const createAttendanceSession = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
     try {
-        const { subject, year, durationMinutes = 5 } = req.body
+        const { subject, year } = req.body
+        const durationMinutes = Math.min(Math.max(req.body.durationMinutes || 5, 1), 180);
 
         const teacherId = req.user?.userId
 
@@ -56,7 +57,7 @@ export const createAttendanceSession = async (req: AuthenticatedRequest, res: Re
 export const markAttendance = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
     try {
         const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
-        const CLOCK_DRIFT_MARGIN_MS = 2 * 60 * 1000;
+        const CLOCK_DRIFT_MARGIN_MS = 60 * 1000;
         const now = new Date();
 
         const studentId = req.user?.userId;
@@ -101,7 +102,10 @@ export const markAttendance = async (req: AuthenticatedRequest, res: Response<IA
             })
         }
 
-        const parsedTimestamp = typeof timestamp === "number" ? timestamp : Number(timeStamp);
+        const parsedTimestamp = typeof timestamp === "number"
+            ? timestamp
+            : new Date(timestamp).getTime();
+
         const scanTime = new Date(parsedTimestamp)
 
         if (isNaN(scanTime.getTime()) || parsedTimestamp < 1000000000000) {
@@ -160,7 +164,6 @@ export const markAttendance = async (req: AuthenticatedRequest, res: Response<IA
 export const getSessionAttendance = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
     try {
         const teacherId = req.user?.userId
-
         const { sessionId } = req.params;
 
         if (!sessionId) {
@@ -188,7 +191,10 @@ export const getSessionAttendance = async (req: AuthenticatedRequest, res: Respo
             });
         }
         const totalStudents = await prisma.user.count({
-            where: { role: 'STUDENT' },
+            where: {
+                role: 'STUDENT',
+                year: session.year
+            },
         })
 
         const attendanceRecords = await prisma.attendance.findMany({
@@ -212,6 +218,7 @@ export const getSessionAttendance = async (req: AuthenticatedRequest, res: Respo
             data: {
                 sessionId,
                 subject: session.subject,
+                year: session.year,
                 totalPresent: attendanceRecords.length,
                 attendance: attendanceRecords,
                 totalStudents: totalStudents
@@ -238,8 +245,17 @@ export const getStudentAttendanceHistory = async (req: AuthenticatedRequest, res
             });
         }
 
+        const student = await prisma.user.findUnique({ where: { id: studentId } });
+        if (!student || !student.year) {
+            return res.status(404).json({
+                success: false,
+                message: 'Student year profile not found'
+            });
+        }
+
         const totalSessionsGrouped = await prisma.session.groupBy({
             by: ['subject'],
+            where: { year: student.year },
             _count: { id: true }
         });
 
@@ -317,3 +333,117 @@ export const getStudentAttendanceHistory = async (req: AuthenticatedRequest, res
         });
     }
 };
+
+export const getSubjectByYear = async (req: AuthenticatedRequest, res: Response<IApiResponse>) => {
+    try {
+        const yearParam = Array.isArray(req.params.year) ? req.params.year[0] : req.params.year;
+        const teacherId = req.user?.userId;
+
+        if (!yearParam || !teacherId) {
+            return res.status(400).json({
+                success: false,
+                message: "Year parameter is required"
+            })
+        }
+
+        const sessions = await prisma.session.findMany({
+            where: {
+                teacherId,
+                year: yearParam
+            },
+            select: { subject: true },
+            distinct: ['subject']
+        })
+
+        const subjects = sessions
+            .map(s => s.subject)
+            .filter((s): s is string => s !== null && s !== undefined);
+
+        if (subjects.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No subjects found for the given year"
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            message: "Subjects fetched successfully",
+            data: subjects
+        });
+
+    } catch (error: any) {
+        console.error("Get subjects by year error:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+}
+
+export const exportSubjectAttendance = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { year, subject } = req.query;
+
+        if (!year || !subject) {
+            return res.status(400).json({ success: false, message: "Year and subject query parameters are required" });
+        }
+
+        const students = await prisma.user.findMany({
+            where: { role: 'STUDENT', year: String(year) },
+            orderBy: { rollNumber: 'asc' }
+        })
+
+        const sessions = await prisma.session.findMany({
+            where: { year: String(year), subject: String(subject) },
+            include: { attendances: true },
+            orderBy: { createdAt: "asc" }
+        })
+
+        if (sessions.length === 0 || students.length === 0) {
+            return res.status(404).json({ success: false, message: "No attendance data or students found for this filter." });
+        }
+
+        const csvRows = students.map(student => {
+            const row: any = {
+                "Roll Number": student.rollNumber,
+                "Student Name": student.name,
+                "Email": student.email
+            }
+
+            let attendedCount = 0
+            sessions.forEach(session => {
+                const sessionDate = session.createdAt.toISOString().split('T')[0];
+                const wasPresent = session.attendances.some(att => att.studentId === student.id)
+                row[sessionDate] = wasPresent ? "P" : "A"
+                if (wasPresent) attendedCount++
+            })
+
+            row["Total Attended"] = attendedCount;
+            row["Total Classes"] = sessions.length;
+            row["Percentage"] = `${((attendedCount / sessions.length) * 100).toFixed(2)}%`;
+            return row;
+
+        })
+
+        const fields = [
+            "Roll Number",
+            "Student Name",
+            "Email",
+            ...sessions.map(s => s.createdAt.toISOString().split('T')[0]),
+            "Total Attended",
+            "Total Classes",
+            "Percentage"
+        ];
+
+        const json2csvParser = new Parser({ fields });
+        const csv = json2csvParser.parse(csvRows);
+
+        res.header('Content-Type', 'text/csv');
+        res.attachment(`${year}_${subject}_Attendance_Report.csv`);
+        return res.send(csv);
+    } catch (error: any) {
+        console.error("Export error:", error.message);
+        return res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+    }
+}
