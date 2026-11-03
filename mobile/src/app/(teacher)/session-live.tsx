@@ -111,7 +111,12 @@ const SessionLiveScreen = () => {
                 <View className="flex-row justify-between items-center mb-4">
                     <View>
                         <Text className="text-blue-100 text-sm">Live Session</Text>
-                        <Text className="text-white text-2xl font-bold">{session?.subject || 'Unknown Subject'}</Text>
+                        <Text className="text-white text-2xl font-bold mr-2">{session?.subject || 'Unknown Subject'}</Text>
+                        {session?.year && (
+                            <Text className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-md font-semibold">
+                                {session.year}
+                            </Text>
+                        )}
                     </View>
                     <View className="bg-green-500/20 px-3 py-1 rounded-full flex-row items-center">
                         <View className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse" />

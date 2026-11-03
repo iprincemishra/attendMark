@@ -1,8 +1,14 @@
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'expo-router';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import DeveloperBadge from '@/components/DeveloperBadge';
+
+const TEACHER_YEARS = [
+    { title: 'BCA 1st Year', subtitle: 'Sem I & II Reports', year: 'BCA1' },
+    { title: 'BCA 2nd Year', subtitle: 'Sem III & IV Reports', year: 'BCA2' },
+    { title: 'BCA 3rd Year', subtitle: 'Sem V & VI Reports', year: 'BCA3' },
+];
 
 const TeacherDashboard = () => {
 
@@ -16,7 +22,7 @@ const TeacherDashboard = () => {
 
     return (
         <ScrollView className="flex-1 bg-gray-50">
-            <View className='flex h-screen justify-between'>
+            <View className='flex min-h-screen justify-between'>
 
                 <View className='flex'>
                     <View className="bg-blue-600 pt-16 pb-8 px-6 rounded-b-3xl shadow-md">
@@ -47,17 +53,31 @@ const TeacherDashboard = () => {
                             </View>
                             <View className="flex-1">
                                 <Text className="text-xl font-bold text-gray-800">Start New Class</Text>
-                                <Text className="text-gray-500 mt-1">Create a attendance session for your subject</Text>
+                                <Text className="text-gray-500 mt-1">Create an attendance session for your subject</Text>
                             </View>
                             <Feather name="arrow-right" size={24} color="#3b82f6" />
                         </TouchableOpacity>
 
-                        <View className="mt-8 bg-blue-50 p-6 rounded-3xl border border-blue-100 border-dashed items-center">
-                            <Feather name="bar-chart-2" size={32} color="#93c5fd" style={{ marginBottom: 12 }} />
-                            <Text className="text-blue-400/60 font-bold text-center">
-                                Detailed attendance analytics and history export will be available here soon.
-                            </Text>
-                        </View>
+                        <Text className="text-gray-500 text-sm font-semibold mb-3 uppercase tracking-wider">Attendance Reports & Exports</Text>
+
+                        {TEACHER_YEARS.map((item) => (
+                            <TouchableOpacity
+                                key={item.year}
+                                onPress={() => router.push({ pathname: '/(teacher)/reports', params: { year: item.year } })}
+                                className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-3 items-center flex-row justify-between"
+                            >
+                                <View className="flex-row items-center flex-1">
+                                    <View className="bg-blue-50 p-3 rounded-xl mr-4 border border-blue-100">
+                                        <Ionicons name="folder-open-outline" size={24} color="#2563eb" />
+                                    </View>
+                                    <View>
+                                        <Text className="text-lg font-bold text-gray-800">{item.title}</Text>
+                                        <Text className="text-gray-400 text-xs mt-0.5">{item.subtitle}</Text>
+                                    </View>
+                                </View>
+                                <Feather name="chevron-right" size={20} color="#9ca3af" />
+                            </TouchableOpacity>
+                        ))}
                     </View>
                 </View>
 

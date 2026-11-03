@@ -42,7 +42,8 @@
           "imageWidth": 90,
           "resizeMode": "contain"
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,
