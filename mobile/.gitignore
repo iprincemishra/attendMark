@@ -9,14 +9,42 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# ---------------------------------------------------
+# Android Native Build Artifacts & Caches
+# ---------------------------------------------------
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+*.apk
+*.aab
 .kotlin/
 *.orig.*
+
+# ---------------------------------------------------
+# iOS (if you prebuild ios later)
+# ---------------------------------------------------
+ios/Pods/
+ios/build/
+
+# ---------------------------------------------------
+# Keystores & Signing Secrets — NEVER COMMIT
+# ---------------------------------------------------
+*.keystore
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+*.pem
+keystore.properties
+# Allow the debug keystore so other devs can build locally without setup
+!android/app/debug.keystore
+
+# ---------------------------------------------------
+# iOS (Still fully ignored until you write custom Swift/Obj-C)
+# ---------------------------------------------------
+/ios
 
 # Metro
 .metro-health-check*
@@ -28,19 +56,18 @@ yarn-error.*
 
 # macOS
 .DS_Store
-*.pem
 
-# local env files
-.env*.local
+# ---------------------------------------------------
+# Env & secrets
+# ---------------------------------------------------
+.env
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo
 
 /example
-
-# generated native folders
-/ios
-/android
 
 # Editor
 .idea/
@@ -54,8 +81,3 @@ GoogleService-Info.plist
 
 # Testing
 coverage/
-
-# Env (replace your .env*.local line with this)
-.env
-.env.*
-!.env.example
